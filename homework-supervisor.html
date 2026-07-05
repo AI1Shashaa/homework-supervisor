@@ -51,12 +51,11 @@
             justify-content: center;
             background: var(--bg-primary);
             z-index: 1000;
-            transition: opacity 0.5s;
+            transition: opacity 0.3s;
         }
 
         #startScreen.hidden {
-            opacity: 0;
-            pointer-events: none;
+            display: none !important;
         }
 
         .start-icon {
@@ -1063,8 +1062,18 @@
                 handleVoiceCommand(transcript);
             };
 
-            speechRecognition.onerror = (err) => {
-                console.error('语音识别错误:', err);
+            speechRecognition.onend = () => {
+                // 自动重启（如果还在运行状态）
+                if (appState.isRunning) {
+                    try { speechRecognition.start(); } catch (e) {}
+                }
+            };
+
+            speechRecognition.onerror = (event) => {
+                // not-allowed 和 no-speech 是正常的，不需要报错
+                if (event.error !== 'no-speech' && event.error !== 'not-allowed' && event.error !== 'aborted') {
+                    console.warn('语音识别错误:', event.error);
+                }
             };
         }
 
@@ -1171,6 +1180,7 @@
                     audio: false
                 });
                 el.video.srcObject = stream;
+                appState.cameraAvailable = true;
                 return new Promise((resolve) => {
                     el.video.onloadedmetadata = () => {
                         el.video.play();
@@ -1179,9 +1189,19 @@
                     };
                 });
             } catch (err) {
-                console.error('摄像头初始化失败:', err);
-                showToast('无法访问摄像头，请检查权限', 'warning');
-                throw err;
+                console.warn('摄像头不可用，使用演示模式:', err.message);
+                appState.cameraAvailable = false;
+                // 在视频区域显示提示
+                const placeholder = document.createElement('div');
+                placeholder.id = 'cameraPlaceholder';
+                placeholder.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a24;color:#a0a0b0;gap:12px;';
+                placeholder.innerHTML = `
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="#4ecdc4"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                    <div style="font-size:16px;font-weight:600;color:#f0f0f5;">演示模式</div>
+                    <div style="font-size:13px;">未检测到摄像头，功能按钮仍可测试</div>
+                `;
+                el.videoSection.appendChild(placeholder);
+                resizeCanvas();
             }
         }
 
@@ -1693,14 +1713,16 @@
             if (!appState.isRunning) return;
 
             try {
-                const detection = await detectFace();
-                drawFaceOverlay(detection);
+                if (appState.modelsLoaded && appState.cameraAvailable) {
+                    const detection = await detectFace();
+                    drawFaceOverlay(detection);
 
-                if (Date.now() % POSTURE_CHECK_INTERVAL < 100) {
-                    checkPosture(detection);
-                }
-                if (Date.now() % FOCUS_CHECK_INTERVAL < 100) {
-                    checkFocus(detection);
+                    if (Date.now() % POSTURE_CHECK_INTERVAL < 100) {
+                        checkPosture(detection);
+                    }
+                    if (Date.now() % FOCUS_CHECK_INTERVAL < 100) {
+                        checkFocus(detection);
+                    }
                 }
             } catch (err) {
                 console.error('检测循环错误:', err);
@@ -1766,11 +1788,12 @@
             generateSummary();
         });
 
-        el.closeSummaryBtn.addEventListener('click', () => {
-            el.summaryModal.classList.remove('active');
-            // 重置状态
-            location.reload();
-        });
+        if (el.closeSummaryBtn) {
+            el.closeSummaryBtn.addEventListener('click', () => {
+                el.summaryModal.classList.remove('active');
+                location.reload();
+            });
+        }
 
         el.muteBtn.addEventListener('click', () => {
             appState.isMuted = !appState.isMuted;
