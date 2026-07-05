@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="作业助手">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#4ecdc4">
+    <title>作业监督助手</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f0f15;
+            --bg-secondary: #1a1a24;
+            --bg-panel: #252532;
+            --accent: #4ecdc4;
+            --accent-warn: #ff6b6b;
+            --accent-caution: #feca57;
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b0;
+            --border: #333340;
+            --success: #1dd1a1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* 启动页 */
+        #startScreen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        #startScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .start-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--accent), #44a08d);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+            box-shadow: 0 20px 60px rgba(78, 205, 196, 0.3);
+        }
+
+        .start-icon svg {
+            width: 64px;
+            height: 64px;
+            fill: white;
+        }
+
+        .start-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .start-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: 48px;
+        }
+
+        .start-btn {
+            padding: 16px 48px;
+            background: var(--accent);
+            color: #0f0f15;
+            border: none;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .start-btn:active {
+            transform: scale(0.96);
+        }
+
+        .permission-list {
+            margin-top: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .permission-item svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent);
+        }
+
+        /* 主界面 */
+        #mainScreen {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            flex-direction: column;
+        }
+
+        #mainScreen.active {
+            display: flex;
+        }
+
+        /* 顶部状态栏 */
+        .status-bar {
+            height: 56px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .timer-display {
+            font-size: 18px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--accent);
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 视频区 */
+        .video-section {
+            flex: 1;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #videoElement {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        #overlayCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* 变焦遮罩 */
+        .zoom-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-overlay.active {
+            display: flex;
+        }
+
+        .zoom-frame {
+            width: 300px;
+            height: 200px;
+            border: 3px dashed var(--accent);
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .zoom-hint {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            color: var(--accent);
+            font-size: 14px;
+        }
+
+        /* 焦距指示 */
+        .focal-indicator {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            backdrop-filter: blur(8px);
+        }
+
+        .focal-indicator span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* 右侧状态面板 */
+        .side-panel {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            background: var(--bg-panel);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .panel-section-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        /* 姿态状态 */
+        .posture-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .posture-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(29, 209, 161, 0.15);
+        }
+
+        .posture-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--success);
+        }
+
+        .posture-icon.warning {
+            background: rgba(255, 107, 107, 0.15);
+        }
+
+        .posture-icon.warning svg {
+            fill: var(--accent-warn);
+        }
+
+        .posture-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .posture-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* 专注度条 */
+        .focus-bar-container {
+            height: 8px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .focus-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-warn), var(--accent-caution), var(--success));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .focus-value {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 事件日志 */
+        .event-log {
+            max-height: 180px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .event-time {
+            color: var(--text-secondary);
+            font-size: 11px;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .event-text {
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        /* 底部工具栏 */
+        .bottom-bar {
+            height: 72px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 0 20px;
+            flex-shrink: 0;
+        }
+
+        .tool-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 80px;
+        }
+
+        .tool-btn:active {
+            transform: scale(0.95);
+        }
+
+        .tool-btn.active {
+            background: var(--accent);
+            color: #0f0f15;
+            border-color: var(--accent);
+        }
+
+        .tool-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .tool-btn span {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* 语音状态 */
+        .voice-indicator {
+            position: absolute;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0,0,0,0.8);
+            padding: 14px 24px;
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+        }
+
+        .voice-indicator.active {
+            display: flex;
+        }
+
+        .voice-waves {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 24px;
+        }
+
+        .voice-wave {
+            width: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .voice-wave:nth-child(1) { height: 8px; animation-delay: 0s; }
+        .voice-wave:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+        .voice-wave:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+        .voice-wave:nth-child(4) { height: 16px; animation-delay: 0.3s; }
+        .voice-wave:nth-child(5) { height: 8px; animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+
+        .voice-text {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        /* 读题覆盖层 */
+        .reading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .reading-overlay.active {
+            display: flex;
+        }
+
+        .reading-content {
+            text-align: center;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .reading-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--accent);
+        }
+
+        .reading-text {
+            font-size: 18px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+        }
+
+        .reading-hint {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* 总结弹窗 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+            border: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-panel);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .summary-section {
+            margin-bottom: 20px;
+        }
+
+        .summary-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .summary-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            padding: 10px 14px;
+            background: var(--bg-panel);
+            border-radius: 10px;
+        }
+
+        .summary-item svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--success);
+            flex-shrink: 0;
+        }
+
+        .summary-item.warning svg {
+            fill: var(--accent-warn);
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            color: #0f0f15;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        /* 提示气泡 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            padding: 14px 24px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 300;
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.warning {
+            border-color: var(--accent-warn);
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            background: rgba(29, 209, 161, 0.1);
+        }
+
+        /* 区域选择器（读题用） */
+        .region-selector {
+            position: absolute;
+            inset: 0;
+            display: none;
+            z-index: 40;
+        }
+
+        .region-selector.active {
+            display: block;
+        }
+
+        .region-selector canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .region-hint {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: var(--accent);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* 加载 */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            gap: 20px;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .side-panel {
+                width: 100%;
+                height: 200px;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            .panel-section {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载层 -->
+    <div id="loadingOverlay" class="loading-overlay active">
+        <div class="spinner"></div>
+        <div style="color: var(--text-secondary);">正在加载模型...</div>
+    </div>
+
+    <!-- 启动页 -->
+    <div id="startScreen">
+        <div class="start-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <div class="start-title">作业监督助手</div>
+        <div class="start-subtitle">AI 实时陪伴，培养好习惯</div>
+        <button class="start-btn" id="startBtn">开始使用</button>
+        <div class="permission-list">
+            <div class="permission-item">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                摄像头权限（监督坐姿）
+            </div>
+            <div class="permission-item">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                麦克风权限（语音读题）
+            </div>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="mainScreen">
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <div class="status-text" id="statusText">监控中</div>
+            </div>
+            <div class="timer-display" id="timer">00:00</div>
+            <div class="status-right">
+                <button class="icon-btn" id="muteBtn" title="静音">
+                    <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                </button>
+                <button class="icon-btn" id="settingsBtn" title="设置">
+                    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="video-section" id="videoSection">
+                <video id="videoElement" autoplay playsinline muted></video>
+                <canvas id="overlayCanvas"></canvas>
+
+                <div class="focal-indicator">
+                    焦距: <span id="focalValue">0.5x</span>
+                </div>
+
+                <!-- 语音指示器 -->
+                <div class="voice-indicator" id="voiceIndicator">
+                    <div class="voice-waves">
+                        <div class="voice-wave"></div>
+                        <div class="voice-wave"></div>
+                        <div class="voice-wave"></div>
+                        <div class="voice-wave"></div>
+                        <div class="voice-wave"></div>
+                    </div>
+                    <div class="voice-text" id="voiceText">正在聆听...</div>
+                </div>
+
+                <!-- 区域选择（读题） -->
+                <div class="region-selector" id="regionSelector">
+                    <canvas id="regionCanvas"></canvas>
+                    <div class="region-hint">请用手指框选题目区域</div>
+                </div>
+
+                <!-- 读题覆盖 -->
+                <div class="reading-overlay" id="readingOverlay">
+                    <div class="reading-content">
+                        <div class="reading-title" id="readingTitle">读题模式</div>
+                        <div class="reading-text" id="readingText">正在识别题目...</div>
+                        <div class="reading-hint" id="readingHint">请稍候</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <div class="panel-section">
+                    <div class="panel-section-title">坐姿状态</div>
+                    <div class="posture-status" id="postureStatus">
+                        <div class="posture-icon" id="postureIcon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        </div>
+                        <div>
+                            <div class="posture-text" id="postureText">坐姿正确</div>
+                            <div class="posture-sub" id="postureSub">保持良好的姿势</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-section-title">专注度</div>
+                    <div class="focus-bar-container">
+                        <div class="focus-bar" id="focusBar" style="width: 85%"></div>
+                    </div>
+                    <div class="focus-value">
+                        <span>走神次数</span>
+                        <span id="distractCount">0</span>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-section-title">事件记录</div>
+                    <div class="event-log" id="eventLog">
+                        <div class="event-item">
+                            <span class="event-time">--:--</span>
+                            <span class="event-text">系统启动，开始监督</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-bar">
+            <button class="tool-btn" id="readBtn">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                <span>帮我读题</span>
+            </button>
+            <button class="tool-btn" id="checkBtn">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span>检查作业</span>
+            </button>
+            <button class="tool-btn" id="finishBtn">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                <span>完成作业</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 总结弹窗 -->
+    <div class="modal-overlay" id="summaryModal">
+        <div class="modal">
+            <div class="modal-title">作业完成总结</div>
+            <div class="modal-subtitle" id="summaryDate">2026年7月4日</div>
+
+            <div class="summary-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTime">00:00</div>
+                    <div class="stat-label">总用时</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalQuestions">0</div>
+                    <div class="stat-label">完成题目</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="accuracyRate">0%</div>
+                    <div class="stat-label">正确率</div>
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-section-title">本次表现</div>
+                <div class="summary-list" id="performanceList">
+                    <div class="summary-item">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        坐姿保持良好，未出现明显歪斜
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-section-title">需要改进</div>
+                <div class="summary-list" id="improveList">
+                    <div class="summary-item warning">
+                        <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                        有 2 次走神提醒，专注力可继续提升
+                    </div>
+                </div>
+            </div>
+
+            <button class="modal-btn" id="closeSummaryBtn">确定</button>
+        </div>
+    </div>
+
+    <!-- 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /**
+         * 作业监督助手主应用
+         * 功能：实时坐姿检测、走神提醒、语音读题、作业总结
+         */
+
+        // ==================== 常量 ====================
+        const FOCAL_DEFAULT = 0.5;
+        const FOCAL_READING = 2.0;
+        const POSTURE_CHECK_INTERVAL = 2000;
+        const FOCUS_CHECK_INTERVAL = 1500;
+        const SPEECH_LANG = 'zh-CN';
+
+        // ==================== 状态 ====================
+        const appState = {
+            isRunning: false,
+            isMuted: false,
+            isReadingMode: false,
+            focalLevel: FOCAL_DEFAULT,
+            sessionStartTime: null,
+            elapsedSeconds: 0,
+            distractCount: 0,
+            postureIssues: 0,
+            questionsRead: 0,
+            questionsCorrect: 0,
+            questionsTotal: 0,
+            eventHistory: [],
+            faceDetected: false,
+            lastFacePosition: null,
+            eyeOpenHistory: [],
+            modelsLoaded: false
+        };
+
+        // ==================== DOM 元素 ====================
+        const el = {
+            startScreen: document.getElementById('startScreen'),
+            mainScreen: document.getElementById('mainScreen'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            startBtn: document.getElementById('startBtn'),
+            video: document.getElementById('videoElement'),
+            overlayCanvas: document.getElementById('overlayCanvas'),
+            videoSection: document.getElementById('videoSection'),
+            statusIndicator: document.getElementById('statusIndicator'),
+            statusText: document.getElementById('statusText'),
+            timer: document.getElementById('timer'),
+            focalValue: document.getElementById('focalValue'),
+            postureIcon: document.getElementById('postureIcon'),
+            postureText: document.getElementById('postureText'),
+            postureSub: document.getElementById('postureSub'),
+            focusBar: document.getElementById('focusBar'),
+            distractCount: document.getElementById('distractCount'),
+            eventLog: document.getElementById('eventLog'),
+            voiceIndicator: document.getElementById('voiceIndicator'),
+            voiceText: document.getElementById('voiceText'),
+            regionSelector: document.getElementById('regionSelector'),
+            regionCanvas: document.getElementById('regionCanvas'),
+            readingOverlay: document.getElementById('readingOverlay'),
+            readingTitle: document.getElementById('readingTitle'),
+            readingText: document.getElementById('readingText'),
+            readingHint: document.getElementById('readingHint'),
+            summaryModal: document.getElementById('summaryModal'),
+            toast: document.getElementById('toast'),
+            readBtn: document.getElementById('readBtn'),
+            checkBtn: document.getElementById('checkBtn'),
+            finishBtn: document.getElementById('finishBtn'),
+            muteBtn: document.getElementById('muteBtn')
+        };
+
+        // ==================== 语音合成 ====================
+        let speechSynth = window.speechSynthesis;
+        let speechRecognition = null;
+
+        /**
+         * 初始化语音识别
+         */
+        function initSpeechRecognition() {
+            const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognitionAPI) {
+                console.warn('浏览器不支持语音识别');
+                return;
+            }
+            speechRecognition = new SpeechRecognitionAPI();
+            speechRecognition.lang = SPEECH_LANG;
+            speechRecognition.continuous = true;
+            speechRecognition.interimResults = false;
+
+            speechRecognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                handleVoiceCommand(transcript);
+            };
+
+            speechRecognition.onerror = (err) => {
+                console.error('语音识别错误:', err);
+            };
+        }
+
+        /**
+         * 语音播报
+         * @param {string} text - 播报内容
+         */
+        function speak(text) {
+            if (appState.isMuted || !speechSynth) return;
+
+            speechSynth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = SPEECH_LANG;
+            utterance.rate = 0.95;
+            utterance.pitch = 1.05;
+            speechSynth.speak(utterance);
+        }
+
+        /**
+         * 处理语音指令
+         * @param {string} text - 识别到的文字
+         */
+        function handleVoiceCommand(text) {
+            const lower = text.toLowerCase();
+            if (lower.includes('读题') || lower.includes('帮我') || lower.includes('读一下')) {
+                startReadQuestionFlow();
+            }
+        }
+
+        // ==================== 工具函数 ====================
+
+        /**
+         * 格式化时间
+         * @param {number} seconds - 秒数
+         * @returns {string} 格式化后的时间字符串
+         */
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        /**
+         * 获取当前时间字符串
+         * @returns {string} 当前时间 HH:MM
+         */
+        function getCurrentTimeStr() {
+            const now = new Date();
+            return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        /**
+         * 显示提示
+         * @param {string} text - 提示内容
+         * @param {string} type - 提示类型
+         */
+        function showToast(text, type = '') {
+            el.toast.textContent = text;
+            el.toast.className = `toast ${type}`;
+            requestAnimationFrame(() => el.toast.classList.add('show'));
+            setTimeout(() => el.toast.classList.remove('show'), 3000);
+        }
+
+        /**
+         * 添加事件日志
+         * @param {string} text - 事件描述
+         */
+        function addEvent(text) {
+            const time = getCurrentTimeStr();
+            appState.eventHistory.push({ time, text });
+
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            item.innerHTML = `<span class="event-time">${time}</span><span class="event-text">${text}</span>`;
+            el.eventLog.prepend(item);
+
+            if (el.eventLog.children.length > 20) {
+                el.eventLog.lastElementChild.remove();
+            }
+        }
+
+        /**
+         * 更新焦距显示
+         * @param {number} level - 焦距级别
+         */
+        function setFocalLevel(level) {
+            appState.focalLevel = level;
+            el.focalValue.textContent = `${level}x`;
+
+            const scale = level / FOCAL_DEFAULT;
+            el.video.style.transform = `scaleX(-1) scale(${scale})`;
+        }
+
+        // ==================== 摄像头 ====================
+
+        /**
+         * 初始化摄像头
+         * @returns {Promise<void>}
+         */
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+                el.video.srcObject = stream;
+                return new Promise((resolve) => {
+                    el.video.onloadedmetadata = () => {
+                        el.video.play();
+                        resizeCanvas();
+                        resolve();
+                    };
+                });
+            } catch (err) {
+                console.error('摄像头初始化失败:', err);
+                showToast('无法访问摄像头，请检查权限', 'warning');
+                throw err;
+            }
+        }
+
+        /**
+         * 调整画布尺寸
+         */
+        function resizeCanvas() {
+            const rect = el.videoSection.getBoundingClientRect();
+            el.overlayCanvas.width = rect.width;
+            el.overlayCanvas.height = rect.height;
+            el.regionCanvas.width = rect.width;
+            el.regionCanvas.height = rect.height;
+        }
+
+        // ==================== Face API ====================
+
+        /**
+         * 加载 face-api 模型
+         * @returns {Promise<void>}
+         */
+        async function loadModels() {
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+            try {
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                appState.modelsLoaded = true;
+                console.log('模型加载完成');
+            } catch (err) {
+                console.warn('模型加载失败，使用模拟模式:', err);
+                appState.modelsLoaded = false;
+            }
+        }
+
+        /**
+         * 检测面部
+         * @returns {Promise<object|null>}
+         */
+        async function detectFace() {
+            if (!appState.modelsLoaded || !el.video.readyState >= 2) return null;
+
+            try {
+                const detection = await faceapi
+                    .detectSingleFace(el.video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                    .withFaceLandmarks();
+                return detection;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        /**
+         * 绘制面部检测框
+         * @param {object} detection - 检测结果
+         */
+        function drawFaceOverlay(detection) {
+            const ctx = el.overlayCanvas.getContext('2d');
+            ctx.clearRect(0, 0, el.overlayCanvas.width, el.overlayCanvas.height);
+
+            if (!detection) return;
+
+            const dims = faceapi.matchDimensions(el.overlayCanvas, el.video, true);
+            const scaled = faceapi.resizeResults(detection, dims);
+
+            // 绘制检测框
+            const box = scaled.detection.box;
+            ctx.strokeStyle = '#4ecdc4';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+            // 绘制关键点
+            if (scaled.landmarks) {
+                const points = scaled.landmarks.positions;
+                ctx.fillStyle = '#ff6b6b';
+                for (const pt of points) {
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // ==================== 坐姿检测 ====================
+
+        /**
+         * 检查坐姿
+         * @param {object} detection - 面部检测结果
+         */
+        function checkPosture(detection) {
+            if (!detection) {
+                appState.faceDetected = false;
+                return;
+            }
+
+            appState.faceDetected = true;
+            const box = detection.detection.box;
+            const videoWidth = el.video.videoWidth || 640;
+            const videoHeight = el.video.videoHeight || 480;
+
+            // 计算面部中心位置（相对于画面中心）
+            const centerX = box.x + box.width / 2;
+            const centerY = box.y + box.height / 2;
+            const normX = centerX / videoWidth;
+            const normY = centerY / videoHeight;
+
+            // 保存位置历史用于判断稳定性
+            appState.lastFacePosition = { x: normX, y: normY, time: Date.now() };
+
+            // 判断坐姿：面部应该大致在画面中央偏上
+            const isCentered = normX > 0.35 && normX < 0.65;
+            const isProperHeight = normY > 0.2 && normY < 0.6;
+
+            if (!isCentered || !isProperHeight) {
+                appState.postureIssues++;
+                if (appState.postureIssues >= 3) {
+                    setPostureWarning(!isCentered ? '头部偏移' : '距离不当');
+                    if (appState.postureIssues === 3) {
+                        speak('小朋友，请注意坐姿，坐端正一点哦');
+                        addEvent('坐姿提醒：' + (!isCentered ? '头部偏移' : '距离不当'));
+                    }
+                }
+            } else {
+                if (appState.postureIssues > 0) {
+                    setPostureGood();
+                }
+                appState.postureIssues = 0;
+            }
+        }
+
+        /**
+         * 设置坐姿良好状态
+         */
+        function setPostureGood() {
+            el.postureIcon.classList.remove('warning');
+            el.postureIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+            el.postureText.textContent = '坐姿正确';
+            el.postureSub.textContent = '保持良好的姿势';
+        }
+
+        /**
+         * 设置坐姿警告状态
+         * @param {string} reason - 警告原因
+         */
+        function setPostureWarning(reason) {
+            el.postureIcon.classList.add('warning');
+            el.postureIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`;
+            el.postureText.textContent = '坐姿需调整';
+            el.postureSub.textContent = reason;
+        }
+
+        // ==================== 走神检测 ====================
+
+        /**
+         * 检查专注度（基于面部特征）
+         * @param {object} detection - 面部检测结果
+         */
+        function checkFocus(detection) {
+            if (!detection || !detection.landmarks) {
+                updateFocusBar(0);
+                return;
+            }
+
+            const landmarks = detection.landmarks;
+            const leftEye = landmarks.getLeftEye();
+            const rightEye = landmarks.getRightEye();
+
+            // 计算眼睛纵横比（EAR）
+            const leftEAR = calculateEAR(leftEye);
+            const rightEAR = calculateEAR(rightEye);
+            const avgEAR = (leftEAR + rightEAR) / 2;
+
+            // 保存历史
+            appState.eyeOpenHistory.push(avgEAR);
+            if (appState.eyeOpenHistory.length > 30) {
+                appState.eyeOpenHistory.shift();
+            }
+
+            // 检测长时间闭眼或视线偏移
+            const isEyesClosed = avgEAR < 0.2;
+            const recentHistory = appState.eyeOpenHistory.slice(-10);
+            const avgRecent = recentHistory.reduce((a, b) => a + b, 0) / recentHistory.length;
+
+            let focusScore = 85;
+
+            if (isEyesClosed) {
+                focusScore -= 40;
+            }
+            if (avgRecent < 0.25) {
+                focusScore -= 30;
+            }
+
+            // 面部偏离中心也降低专注度
+            if (appState.lastFacePosition) {
+                const dx = Math.abs(appState.lastFacePosition.x - 0.5);
+                if (dx > 0.2) focusScore -= 20;
+            }
+
+            focusScore = Math.max(0, Math.min(100, focusScore));
+            updateFocusBar(focusScore);
+
+            // 走神检测
+            if (focusScore < 40 && !isEyesClosed) {
+                appState.distractCount++;
+                el.distractCount.textContent = appState.distractCount;
+                speak('小朋友，专心做作业哦，不要走神');
+                addEvent('走神提醒');
+                showToast('检测到走神，已语音提醒', 'warning');
+
+                // 防止连续触发
+                appState.eyeOpenHistory = [];
+            }
+        }
+
+        /**
+         * 计算眼睛纵横比
+         * @param {Array} eye - 眼睛关键点
+         * @returns {number} EAR值
+         */
+        function calculateEAR(eye) {
+            const dist = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+            const vertical1 = dist(eye[1], eye[5]);
+            const vertical2 = dist(eye[2], eye[4]);
+            const horizontal = dist(eye[0], eye[3]);
+            return (vertical1 + vertical2) / (2 * horizontal);
+        }
+
+        /**
+         * 更新专注度条
+         * @param {number} score - 专注度分数
+         */
+        function updateFocusBar(score) {
+            el.focusBar.style.width = `${score}%`;
+        }
+
+        // ==================== 读题流程 ====================
+
+        /**
+         * 启动读题流程
+         */
+        function startReadQuestionFlow() {
+            if (appState.isReadingMode) return;
+            appState.isReadingMode = true;
+
+            // 第一步：语音提示指定位置
+            speak('请用手指在屏幕上框选题目开始的位置');
+            showToast('请框选题目区域');
+
+            // 显示区域选择
+            el.regionSelector.classList.add('active');
+            setupRegionSelection();
+        }
+
+        /**
+         * 设置区域选择交互
+         */
+        function setupRegionSelection() {
+            const canvas = el.regionCanvas;
+            const ctx = canvas.getContext('2d');
+            let isDrawing = false;
+            let startPos = null;
+            let endPos = null;
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            }
+
+            function drawSelection() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (!startPos || !endPos) return;
+
+                const x = Math.min(startPos.x, endPos.x);
+                const y = Math.min(startPos.y, endPos.y);
+                const w = Math.abs(endPos.x - startPos.x);
+                const h = Math.abs(endPos.y - startPos.y);
+
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([8, 4]);
+                ctx.strokeRect(x, y, w, h);
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = 'rgba(78, 205, 196, 0.1)';
+                ctx.fillRect(x, y, w, h);
+            }
+
+            function onStart(e) {
+                e.preventDefault();
+                isDrawing = true;
+                startPos = getPos(e);
+                endPos = startPos;
+            }
+
+            function onMove(e) {
+                if (!isDrawing) return;
+                e.preventDefault();
+                endPos = getPos(e);
+                drawSelection();
+            }
+
+            function onEnd(e) {
+                if (!isDrawing) return;
+                isDrawing = false;
+                e.preventDefault();
+
+                // 清除事件监听
+                canvas.removeEventListener('mousedown', onStart);
+                canvas.removeEventListener('mousemove', onMove);
+                canvas.removeEventListener('mouseup', onEnd);
+                canvas.removeEventListener('touchstart', onStart);
+                canvas.removeEventListener('touchmove', onMove);
+                canvas.removeEventListener('touchend', onEnd);
+
+                // 进入变焦读题
+                el.regionSelector.classList.remove('active');
+                performZoomAndRead(startPos, endPos);
+            }
+
+            canvas.addEventListener('mousedown', onStart);
+            canvas.addEventListener('mousemove', onMove);
+            canvas.addEventListener('mouseup', onEnd);
+            canvas.addEventListener('touchstart', onStart, { passive: false });
+            canvas.addEventListener('touchmove', onMove, { passive: false });
+            canvas.addEventListener('touchend', onEnd);
+        }
+
+        /**
+         * 执行变焦并读题
+         * @param {object} start - 起始位置
+         * @param {object} end - 结束位置
+         */
+        async function performZoomAndRead(start, end) {
+            const x = Math.min(start.x, end.x);
+            const y = Math.min(start.y, end.y);
+            const w = Math.abs(end.x - start.x);
+            const h = Math.abs(end.y - start.y);
+
+            if (w < 50 || h < 30) {
+                speak('选择的区域太小了，请重新选择');
+                showToast('选择区域太小', 'warning');
+                appState.isReadingMode = false;
+                return;
+            }
+
+            // 显示读题覆盖层
+            el.readingOverlay.classList.add('active');
+            el.readingTitle.textContent = '正在读题';
+            el.readingText.textContent = '正在识别题目内容...';
+            el.readingHint.textContent = '请保持作业本稳定';
+
+            // 变焦到选中区域
+            const sectionRect = el.videoSection.getBoundingClientRect();
+            const scaleX = sectionRect.width / w;
+            const scaleY = sectionRect.height / h;
+            const scale = Math.min(scaleX, scaleY, 4);
+
+            const centerX = x + w / 2;
+            const centerY = y + h / 2;
+            const offsetX = (sectionRect.width / 2 - centerX) * scale;
+            const offsetY = (sectionRect.height / 2 - centerY) * scale;
+
+            el.video.style.transition = 'transform 1s ease';
+            el.video.style.transform = `scaleX(-1) scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`;
+            el.focalValue.textContent = `${(scale * FOCAL_DEFAULT).toFixed(1)}x`;
+
+            // 模拟OCR识别
+            await wait(2000);
+
+            // 模拟识别结果
+            const mockQuestions = [
+                '小明有 15 个苹果，给了小红 7 个，还剩几个？',
+                '计算：36 + 58 = ?',
+                '一个长方形长 8 厘米，宽 5 厘米，求周长。',
+                '3/4 + 1/4 = ?'
+            ];
+            const question = mockQuestions[Math.floor(Math.random() * mockQuestions.length)];
+
+            el.readingText.textContent = question;
+            el.readingHint.textContent = '识别完成，即将朗读';
+
+            await wait(1000);
+
+            // 朗读题目
+            speak(question);
+            appState.questionsRead++;
+            addEvent('语音读题：' + question.substring(0, 20) + '...');
+
+            await wait(4000);
+
+            // 恢复焦距
+            el.readingOverlay.classList.remove('active');
+            el.video.style.transform = `scaleX(-1) scale(1)`;
+            el.focalValue.textContent = `${FOCAL_DEFAULT}x`;
+            appState.isReadingMode = false;
+
+            showToast('读题完成', 'success');
+        }
+
+        /**
+         * 等待指定时间
+         * @param {number} ms - 毫秒
+         * @returns {Promise<void>}
+         */
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ==================== 检查作业 ====================
+
+        /**
+         * 提示检查作业
+         */
+        function promptCheckWork() {
+            speak('这一页做完了吗？做完的话请仔细检查一遍，看看有没有做错的地方');
+            showToast('请检查作业', 'success');
+            addEvent('提示检查作业');
+
+            // 模拟检查过程
+            setTimeout(() => {
+                // 随机生成检查结果
+                const correct = Math.floor(Math.random() * 3) + 1;
+                const wrong = Math.floor(Math.random() * 2);
+                appState.questionsCorrect += correct;
+                appState.questionsTotal += correct + wrong;
+
+                speak(`检查完成，这一页做对了 ${correct} 题，错了 ${wrong} 题。错题要订正哦`);
+                addEvent(`检查完成：对 ${correct} 题，错 ${wrong} 题`);
+            }, 5000);
+        }
+
+        // ==================== 总结 ====================
+
+        /**
+         * 生成作业总结
+         */
+        function generateSummary() {
+            const totalSeconds = appState.elapsedSeconds;
+            const minutes = Math.floor(totalSeconds / 60);
+            const accuracy = appState.questionsTotal > 0
+                ? Math.round((appState.questionsCorrect / appState.questionsTotal) * 100)
+                : 0;
+
+            document.getElementById('totalTime').textContent = formatTime(totalSeconds);
+            document.getElementById('totalQuestions').textContent = appState.questionsTotal;
+            document.getElementById('accuracyRate').textContent = `${accuracy}%`;
+            document.getElementById('summaryDate').textContent = new Date().toLocaleDateString('zh-CN', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            // 表现列表
+            const perfList = document.getElementById('performanceList');
+            perfList.innerHTML = '';
+
+            const goodPosture = appState.postureIssues < 5;
+            const goodFocus = appState.distractCount < 3;
+
+            const items = [
+                { good: goodPosture, text: goodPosture ? '坐姿保持良好，未出现明显歪斜' : '坐姿有几次偏移，需要继续注意' },
+                { good: goodFocus, text: goodFocus ? '专注度不错，很少走神' : `走神被提醒 ${appState.distractCount} 次，专注力需提升` },
+                { good: appState.questionsRead > 0, text: `使用读题功能 ${appState.questionsRead} 次` }
+            ];
+
+            for (const item of items) {
+                const div = document.createElement('div');
+                div.className = 'summary-item' + (item.good ? '' : ' warning');
+                div.innerHTML = `
+                    <svg viewBox="0 0 24 24"><path d="${item.good ? 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' : 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'}"/></svg>
+                    ${item.text}
+                `;
+                perfList.appendChild(div);
+            }
+
+            // 改进列表
+            const impList = document.getElementById('improveList');
+            impList.innerHTML = '';
+            const improvements = [];
+            if (!goodPosture) improvements.push('注意保持正确坐姿，背部挺直');
+            if (!goodFocus) improvements.push('提高专注力，减少走神次数');
+            if (accuracy < 80) improvements.push('提高做题准确率，认真审题');
+            if (improvements.length === 0) improvements.push('继续保持，表现很棒！');
+
+            for (const text of improvements) {
+                const div = document.createElement('div');
+                div.className = 'summary-item' + (text.includes('继续') ? '' : ' warning');
+                div.innerHTML = `
+                    <svg viewBox="0 0 24 24"><path d="${text.includes('继续') ? 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' : 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'}"/></svg>
+                    ${text}
+                `;
+                impList.appendChild(div);
+            }
+
+            el.summaryModal.classList.add('active');
+
+            // 语音总结
+            const summaryText = `本次作业共用时 ${minutes} 分钟，完成 ${appState.questionsTotal} 题，正确率 ${accuracy}%。` +
+                (goodFocus ? '专注力不错。' : `走神了 ${appState.distractCount} 次，下次要注意。`) +
+                '继续加油！';
+            speak(summaryText);
+            addEvent('生成作业总结');
+        }
+
+        // ==================== 主循环 ====================
+
+        /**
+         * 主检测循环
+         */
+        async function detectionLoop() {
+            if (!appState.isRunning) return;
+
+            try {
+                const detection = await detectFace();
+                drawFaceOverlay(detection);
+
+                if (Date.now() % POSTURE_CHECK_INTERVAL < 100) {
+                    checkPosture(detection);
+                }
+                if (Date.now() % FOCUS_CHECK_INTERVAL < 100) {
+                    checkFocus(detection);
+                }
+            } catch (err) {
+                console.error('检测循环错误:', err);
+            }
+
+            requestAnimationFrame(detectionLoop);
+        }
+
+        /**
+         * 计时器更新
+         */
+        function startTimer() {
+            setInterval(() => {
+                if (!appState.isRunning) return;
+                appState.elapsedSeconds++;
+                el.timer.textContent = formatTime(appState.elapsedSeconds);
+            }, 1000);
+        }
+
+        // ==================== 事件绑定 ====================
+
+        el.startBtn.addEventListener('click', async () => {
+            el.loadingOverlay.classList.add('active');
+
+            try {
+                await Promise.all([
+                    initCamera(),
+                    loadModels()
+                ]);
+
+                el.loadingOverlay.classList.remove('active');
+                el.startScreen.classList.add('hidden');
+                el.mainScreen.classList.add('active');
+
+                appState.isRunning = true;
+                appState.sessionStartTime = Date.now();
+
+                initSpeechRecognition();
+                if (speechRecognition) {
+                    try { speechRecognition.start(); } catch (e) {}
+                }
+
+                speak('作业监督已启动，加油哦');
+                addEvent('开始作业监督');
+
+                detectionLoop();
+                startTimer();
+            } catch (err) {
+                el.loadingOverlay.classList.remove('active');
+                showToast('启动失败，请检查权限设置', 'warning');
+            }
+        });
+
+        el.readBtn.addEventListener('click', () => startReadQuestionFlow());
+
+        el.checkBtn.addEventListener('click', () => promptCheckWork());
+
+        el.finishBtn.addEventListener('click', () => {
+            appState.isRunning = false;
+            if (speechRecognition) {
+                try { speechRecognition.stop(); } catch (e) {}
+            }
+            generateSummary();
+        });
+
+        el.closeSummaryBtn.addEventListener('click', () => {
+            el.summaryModal.classList.remove('active');
+            // 重置状态
+            location.reload();
+        });
+
+        el.muteBtn.addEventListener('click', () => {
+            appState.isMuted = !appState.isMuted;
+            el.muteBtn.style.opacity = appState.isMuted ? '0.5' : '1';
+            showToast(appState.isMuted ? '已静音' : '已开启声音');
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // 语音按钮点击反馈
+        document.getElementById('readBtn').addEventListener('click', function() {
+            this.classList.add('active');
+            setTimeout(() => this.classList.remove('active'), 300);
+        });
+
+        console.log('作业监督助手已加载');
+
+        // 注册 Service Worker（PWA 离线支持）
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then(() => {
+                console.log('Service Worker 注册成功');
+            }).catch((err) => {
+                console.warn('Service Worker 注册失败:', err);
+            });
+        }
+    </script>
+</body>
+</html>
