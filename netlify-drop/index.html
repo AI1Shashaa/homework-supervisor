@@ -2265,14 +2265,57 @@
          * 启动读题流程
          */
         function startReadQuestionFlow() {
-            if (appState.isReadingMode || appState.isPaused) return;
-            appState.isReadingMode = true;
+            try {
+                if (appState.isReadingMode || appState.isPaused) return;
+                appState.isReadingMode = true;
 
-            speak('请用手指在屏幕上框选题目开始的位置');
-            showToast('请框选题目区域');
+                // 调整 canvas 尺寸
+                const sectionRect = el.videoSection.getBoundingClientRect();
+                el.regionCanvas.width = sectionRect.width;
+                el.regionCanvas.height = sectionRect.height;
 
-            el.regionSelector.classList.add('active');
-            setupRegionSelection();
+                // 强制显示区域选择器
+                el.regionSelector.style.display = 'block';
+                el.regionSelector.classList.add('active');
+
+                // 语音提示
+                speak('请用手指在屏幕上框选题目开始的位置');
+
+                // 强制显示视觉提示 toast（确保用户看到）
+                showToast('读题模式：请在屏幕上用手指框选题目区域', 'success');
+                addEvent('进入读题模式');
+
+                // 绑定触摸/鼠标事件
+                setupRegionSelection();
+
+                // 15秒后如果没有操作，自动退出
+                appState._readTimeout = setTimeout(() => {
+                    if (appState.isReadingMode) {
+                        exitReadMode();
+                        showToast('读题超时，已退出。如需读题请再次点击按钮');
+                    }
+                }, 15000);
+            } catch (err) {
+                console.error('启动读题失败:', err);
+                appState.isReadingMode = false;
+                showToast('读题启动失败，请重试', 'warning');
+            }
+        }
+
+        /**
+         * 退出读题模式
+         */
+        function exitReadMode() {
+            appState.isReadingMode = false;
+            el.regionSelector.style.display = 'none';
+            el.regionSelector.classList.remove('active');
+            el.readingOverlay.classList.remove('active');
+            el.video.style.transform = 'scaleX(-1)';
+            el.focalValue.textContent = '0.5x';
+            if (appState._readTimeout) {
+                clearTimeout(appState._readTimeout);
+                appState._readTimeout = null;
+            }
         }
 
         /**
@@ -2337,6 +2380,8 @@
                 canvas.removeEventListener('touchmove', onMove);
                 canvas.removeEventListener('touchend', onEnd);
 
+                // 先隐藏选择器，再执行读题
+                el.regionSelector.style.display = 'none';
                 el.regionSelector.classList.remove('active');
                 performZoomAndRead(startPos, endPos);
             }
@@ -2362,8 +2407,11 @@
 
             if (w < 50 || h < 30) {
                 speak('选择的区域太小了，请重新选择');
-                showToast('选择区域太小', 'warning');
-                appState.isReadingMode = false;
+                showToast('选择区域太小，请重新框选', 'warning');
+                // 重新显示选择器
+                el.regionSelector.style.display = 'block';
+                el.regionSelector.classList.add('active');
+                setupRegionSelection();
                 return;
             }
 
@@ -2407,10 +2455,11 @@
 
             await wait(4000);
 
+            // 退出读题模式
             el.readingOverlay.classList.remove('active');
-            el.video.style.transform = `scaleX(-1) scale(1)`;
-            el.focalValue.textContent = `${FOCAL_DEFAULT}x`;
-            appState.isReadingMode = false;
+            el.video.style.transition = 'transform 0.5s ease';
+            el.video.style.transform = 'scaleX(-1)';
+            exitReadMode();
 
             showToast('读题完成', 'success');
         }
