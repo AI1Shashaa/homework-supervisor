@@ -1790,6 +1790,18 @@
         // ==================== 语音合成 ====================
         let speechSynth = window.speechSynthesis;
         let speechRecognition = null;
+        const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        /**
+         * 预热语音引擎（iOS Safari 需要）
+         */
+        function warmUpSpeech() {
+            try {
+                if (!speechSynth) return;
+                speechSynth.getVoices();
+                speechSynth.resume && speechSynth.resume();
+            } catch (e) {}
+        }
 
         /**
          * 初始化语音识别（必须在 startBtn 点击后调用）
@@ -1866,17 +1878,48 @@
          */
         function speak(text) {
             try {
-                if (appState.isMuted || !speechSynth) return;
+                if (appState.isMuted || !speechSynth) {
+                    showToast(text, 'success');
+                    return;
+                }
 
-                speechSynth.cancel();
+                // iOS Safari 需要 resume
+                if (IS_IOS && speechSynth.paused) {
+                    speechSynth.resume();
+                }
+
+                // 只在有正在播放的内容时才 cancel，避免 iOS 上卡住
+                if (speechSynth.speaking) {
+                    speechSynth.cancel();
+                }
+
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = SPEECH_LANG;
                 utterance.rate = 0.95;
                 utterance.pitch = 1.05;
                 utterance.volume = appState.volumeLevel;
-                speechSynth.speak(utterance);
+
+                // iOS Safari：voices 可能为空，尝试用第一个中文 voice
+                const voices = speechSynth.getVoices();
+                const zhVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('CN'));
+                if (zhVoice) utterance.voice = zhVoice;
+
+                // iOS 上首次 speak 可能不生效，延迟一下
+                if (IS_IOS) {
+                    setTimeout(() => speechSynth.speak(utterance), 50);
+                } else {
+                    speechSynth.speak(utterance);
+                }
+
+                // 备用：如果语音没发出来，至少显示 toast
+                setTimeout(() => {
+                    if (!speechSynth.speaking && !appState.isMuted) {
+                        showToast(text, 'success');
+                    }
+                }, 300);
             } catch (err) {
                 console.warn('语音播报失败:', err);
+                showToast(text, 'success');
             }
         }
 
@@ -2642,6 +2685,9 @@
 
                 appState.isRunning = true;
                 appState.sessionStartTime = Date.now();
+
+                // 预热语音引擎（iOS Safari 需要用户手势触发）
+                warmUpSpeech();
 
                 // 在 startBtn 点击后调用语音识别初始化
                 initSpeechRecognition();
