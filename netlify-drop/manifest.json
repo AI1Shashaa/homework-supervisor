@@ -2,7 +2,7 @@
   "name": "作业监督助手",
   "short_name": "作业助手",
   "description": "AI实时监督小朋友做作业，检测坐姿、走神，语音读题和提醒",
-  "start_url": "/homework-supervisor.html",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#0f0f15",

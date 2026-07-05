@@ -7,7 +7,7 @@ const CACHE_NAME = 'homework-supervisor-v1';
 
 /** 需要缓存的资源列表 */
 const ASSETS_TO_CACHE = [
-  '/homework-supervisor.html',
+  '/',
   '/manifest.json'
 ];
 

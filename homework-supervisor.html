@@ -769,6 +769,432 @@
             to { transform: rotate(360deg); }
         }
 
+        /* 音量滑块 */
+        .volume-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border);
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-value {
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 600;
+            min-width: 32px;
+            text-align: right;
+        }
+
+        /* 麦克风常驻图标 */
+        .mic-status-icon {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 30;
+            transition: all 0.3s;
+        }
+
+        .mic-status-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: #666;
+        }
+
+        .mic-status-icon.listening svg {
+            fill: var(--success);
+        }
+
+        .mic-status-icon.listening {
+            box-shadow: 0 0 12px rgba(29, 209, 161, 0.5);
+        }
+
+        /* 暂停遮罩 */
+        .pause-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 15, 21, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 45;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pause-overlay.active {
+            display: flex;
+        }
+
+        .pause-overlay svg {
+            width: 64px;
+            height: 64px;
+            fill: var(--accent);
+            opacity: 0.8;
+        }
+
+        .pause-overlay-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .timer-display.paused {
+            color: var(--accent-warn);
+        }
+
+        /* 设置面板 overlay */
+        .settings-panel-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 250;
+            padding: 20px;
+        }
+
+        .settings-panel-overlay.active {
+            display: flex;
+        }
+
+        .settings-panel {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            padding: 32px;
+            border: 1px solid var(--border);
+        }
+
+        .settings-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .settings-group {
+            margin-bottom: 20px;
+        }
+
+        .settings-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .settings-sublabel {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .sensitivity-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .sensitivity-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sensitivity-btn.active {
+            background: var(--accent);
+            color: #0f0f15;
+            border-color: var(--accent);
+        }
+
+        .settings-close-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .settings-close-btn:hover {
+            background: var(--border);
+        }
+
+        /* 工具栏按钮禁用态 */
+        .tool-btn.disabled {
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        /* 确认弹窗 */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 260;
+            padding: 20px;
+        }
+
+        .confirm-overlay.active {
+            display: flex;
+        }
+
+        .confirm-box {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 360px;
+            padding: 28px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .confirm-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .confirm-btns {
+            display: flex;
+            gap: 12px;
+        }
+
+        .confirm-btns button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .confirm-cancel {
+            background: var(--bg-panel);
+            color: var(--text-primary);
+        }
+
+        .confirm-ok {
+            background: var(--accent-warn);
+            color: #fff;
+            border-color: var(--accent-warn);
+        }
+
+        /* 总结弹窗双按钮 */
+        .modal-btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .modal-btns .modal-btn {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        .modal-btn.secondary {
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        /* 历史记录区域 */
+        .history-section {
+            margin-top: 20px;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        .history-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 8px 12px;
+            background: var(--bg-panel);
+            border-radius: 8px;
+        }
+
+        .history-item-date {
+            color: var(--text-secondary);
+        }
+
+        .history-item-stats {
+            display: flex;
+            gap: 12px;
+            color: var(--accent);
+        }
+
+        .history-item-stats span {
+            color: var(--text-primary);
+        }
+
+        /* 启动页查看历史按钮 */
+        .history-btn {
+            margin-top: 16px;
+            padding: 12px 36px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 历史弹窗 */
+        .history-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            padding: 20px;
+        }
+
+        .history-modal-overlay.active {
+            display: flex;
+        }
+
+        .history-modal {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+            border: 1px solid var(--border);
+        }
+
+        .history-modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .history-modal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-modal-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            font-size: 13px;
+            padding: 10px 14px;
+            background: var(--bg-panel);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .history-modal-item.header {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .history-modal-item .val {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .history-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding: 20px;
+        }
+
+        .history-close-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
         /* 响应式 */
         @media (max-width: 768px) {
             .main-content {
@@ -803,6 +1229,7 @@
         <div class="start-title">作业监督助手</div>
         <div class="start-subtitle">AI 实时陪伴，培养好习惯</div>
         <button class="start-btn" id="startBtn">开始使用</button>
+        <button class="history-btn" id="viewHistoryBtn">查看历史</button>
         <div class="permission-list">
             <div class="permission-item">
                 <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
@@ -842,6 +1269,11 @@
                     焦距: <span id="focalValue">0.5x</span>
                 </div>
 
+                <!-- 麦克风状态图标 -->
+                <div class="mic-status-icon" id="micStatusIcon">
+                    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                </div>
+
                 <!-- 语音指示器 -->
                 <div class="voice-indicator" id="voiceIndicator">
                     <div class="voice-waves">
@@ -868,9 +1300,24 @@
                         <div class="reading-hint" id="readingHint">请稍候</div>
                     </div>
                 </div>
+
+                <!-- 暂停遮罩 -->
+                <div class="pause-overlay" id="pauseOverlay">
+                    <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    <div class="pause-overlay-text">已暂停</div>
+                </div>
             </div>
 
             <div class="side-panel">
+                <div class="panel-section">
+                    <div class="panel-section-title">音量</div>
+                    <div class="volume-section">
+                        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--text-secondary);flex-shrink:0;"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+                        <span class="volume-value" id="volumeValue">80%</span>
+                    </div>
+                </div>
+
                 <div class="panel-section">
                     <div class="panel-section-title">坐姿状态</div>
                     <div class="posture-status" id="postureStatus">
@@ -908,6 +1355,10 @@
         </div>
 
         <div class="bottom-bar">
+            <button class="tool-btn" id="pauseBtn">
+                <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                <span>暂停</span>
+            </button>
             <button class="tool-btn" id="readBtn">
                 <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
                 <span>帮我读题</span>
@@ -916,9 +1367,9 @@
                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 <span>检查作业</span>
             </button>
-            <button class="tool-btn" id="finishBtn">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                <span>完成作业</span>
+            <button class="tool-btn" id="stopBtn">
+                <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                <span>结束</span>
             </button>
         </div>
     </div>
@@ -964,7 +1415,74 @@
                 </div>
             </div>
 
-            <button class="modal-btn" id="closeSummaryBtn">确定</button>
+            <!-- 历史记录（总结弹窗内） -->
+            <div class="history-section" id="summaryHistorySection">
+                <div class="history-section-title">最近记录</div>
+                <div class="history-list" id="summaryHistoryList"></div>
+            </div>
+
+            <div class="modal-btns">
+                <button class="modal-btn" id="newHomeworkBtn">开始新作业</button>
+                <button class="modal-btn secondary" id="closeSummaryBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel-overlay" id="settingsPanelOverlay">
+        <div class="settings-panel">
+            <div class="settings-title">设置</div>
+
+            <div class="settings-group">
+                <div class="settings-label">音量</div>
+                <div class="volume-section">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--text-secondary);flex-shrink:0;"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                    <input type="range" class="volume-slider" id="settingsVolumeSlider" min="0" max="100" value="80">
+                    <span class="volume-value" id="settingsVolumeValue">80%</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <div class="settings-label">走神检测灵敏度</div>
+                <div class="settings-sublabel">灵敏度越高，越容易触发走神提醒</div>
+                <div class="sensitivity-group" id="focusSensitivityGroup">
+                    <button class="sensitivity-btn" data-value="low">低</button>
+                    <button class="sensitivity-btn active" data-value="medium">中</button>
+                    <button class="sensitivity-btn" data-value="high">高</button>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <div class="settings-label">坐姿检测灵敏度</div>
+                <div class="settings-sublabel">灵敏度越高，越容易触发坐姿提醒</div>
+                <div class="sensitivity-group" id="postureSensitivityGroup">
+                    <button class="sensitivity-btn" data-value="low">低</button>
+                    <button class="sensitivity-btn active" data-value="medium">中</button>
+                    <button class="sensitivity-btn" data-value="high">高</button>
+                </div>
+            </div>
+
+            <button class="settings-close-btn" id="closeSettingsBtn">关闭</button>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <div class="confirm-text" id="confirmText">确定要结束本次作业吗？</div>
+            <div class="confirm-btns">
+                <button class="confirm-cancel" id="confirmCancelBtn">取消</button>
+                <button class="confirm-ok" id="confirmOkBtn">确定结束</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 历史弹窗（启动页） -->
+    <div class="history-modal-overlay" id="historyModalOverlay">
+        <div class="history-modal">
+            <div class="history-modal-title">作业历史记录</div>
+            <div class="history-modal-list" id="historyModalList"></div>
+            <button class="history-close-btn" id="closeHistoryModalBtn">关闭</button>
         </div>
     </div>
 
@@ -974,7 +1492,7 @@
     <script>
         /**
          * 作业监督助手主应用
-         * 功能：实时坐姿检测、走神提醒、语音读题、作业总结
+         * 功能：实时坐姿检测、走神提醒、语音读题、作业总结、暂停/结束、历史记录
          */
 
         // ==================== 常量 ====================
@@ -983,11 +1501,19 @@
         const POSTURE_CHECK_INTERVAL = 2000;
         const FOCUS_CHECK_INTERVAL = 1500;
         const SPEECH_LANG = 'zh-CN';
+        const STORAGE_KEY_SETTINGS = 'homeworkSupervisor_settings';
+        const STORAGE_KEY_HISTORY = 'homeworkSupervisor_history';
+
+        /** 灵敏度映射：走神检测阈值 */
+        const FOCUS_SENSITIVITY_MAP = { low: 25, medium: 40, high: 55 };
+        /** 灵敏度映射：坐姿连续触发次数 */
+        const POSTURE_SENSITIVITY_MAP = { low: 5, medium: 3, high: 2 };
 
         // ==================== 状态 ====================
         const appState = {
             isRunning: false,
             isMuted: false,
+            isPaused: false,
             isReadingMode: false,
             focalLevel: FOCAL_DEFAULT,
             sessionStartTime: null,
@@ -1001,7 +1527,19 @@
             faceDetected: false,
             lastFacePosition: null,
             eyeOpenHistory: [],
-            modelsLoaded: false
+            modelsLoaded: false,
+            /** 语音播报音量 0-1 */
+            volumeLevel: 0.8,
+            /** 走神检测阈值 */
+            focusThreshold: 40,
+            /** 坐姿检测触发次数阈值 */
+            postureThreshold: 3,
+            /** 语音识别是否活跃 */
+            isListening: false,
+            /** 计时器 interval ID */
+            timerIntervalId: null,
+            /** 检测循环是否暂停 */
+            detectionPaused: false
         };
 
         // ==================== DOM 元素 ====================
@@ -1035,46 +1573,291 @@
             toast: document.getElementById('toast'),
             readBtn: document.getElementById('readBtn'),
             checkBtn: document.getElementById('checkBtn'),
-            finishBtn: document.getElementById('finishBtn'),
-            muteBtn: document.getElementById('muteBtn')
+            muteBtn: document.getElementById('muteBtn'),
+            // 新增元素
+            volumeSlider: document.getElementById('volumeSlider'),
+            volumeValue: document.getElementById('volumeValue'),
+            pauseBtn: document.getElementById('pauseBtn'),
+            stopBtn: document.getElementById('stopBtn'),
+            pauseOverlay: document.getElementById('pauseOverlay'),
+            micStatusIcon: document.getElementById('micStatusIcon'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsPanelOverlay: document.getElementById('settingsPanelOverlay'),
+            settingsVolumeSlider: document.getElementById('settingsVolumeSlider'),
+            settingsVolumeValue: document.getElementById('settingsVolumeValue'),
+            closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+            focusSensitivityGroup: document.getElementById('focusSensitivityGroup'),
+            postureSensitivityGroup: document.getElementById('postureSensitivityGroup'),
+            confirmOverlay: document.getElementById('confirmOverlay'),
+            confirmCancelBtn: document.getElementById('confirmCancelBtn'),
+            confirmOkBtn: document.getElementById('confirmOkBtn'),
+            newHomeworkBtn: document.getElementById('newHomeworkBtn'),
+            closeSummaryBtn: document.getElementById('closeSummaryBtn'),
+            summaryHistorySection: document.getElementById('summaryHistorySection'),
+            summaryHistoryList: document.getElementById('summaryHistoryList'),
+            viewHistoryBtn: document.getElementById('viewHistoryBtn'),
+            historyModalOverlay: document.getElementById('historyModalOverlay'),
+            historyModalList: document.getElementById('historyModalList'),
+            closeHistoryModalBtn: document.getElementById('closeHistoryModalBtn')
         };
+
+        // ==================== 设置持久化 ====================
+
+        /**
+         * 从 localStorage 加载设置
+         */
+        function loadSettings() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+                if (!raw) return;
+                const settings = JSON.parse(raw);
+                if (typeof settings.volume === 'number') {
+                    appState.volumeLevel = settings.volume / 100;
+                }
+                if (settings.focusSensitivity && FOCUS_SENSITIVITY_MAP[settings.focusSensitivity]) {
+                    appState.focusThreshold = FOCUS_SENSITIVITY_MAP[settings.focusSensitivity];
+                }
+                if (settings.postureSensitivity && POSTURE_SENSITIVITY_MAP[settings.postureSensitivity]) {
+                    appState.postureThreshold = POSTURE_SENSITIVITY_MAP[settings.postureSensitivity];
+                }
+                // 同步 UI
+                const volPercent = Math.round(appState.volumeLevel * 100);
+                if (el.volumeSlider) el.volumeSlider.value = volPercent;
+                if (el.volumeValue) el.volumeValue.textContent = volPercent + '%';
+                if (el.settingsVolumeSlider) el.settingsVolumeSlider.value = volPercent;
+                if (el.settingsVolumeValue) el.settingsVolumeValue.textContent = volPercent + '%';
+                updateSensitivityButtons('focusSensitivityGroup', settings.focusSensitivity || 'medium');
+                updateSensitivityButtons('postureSensitivityGroup', settings.postureSensitivity || 'medium');
+            } catch (err) {
+                console.warn('加载设置失败:', err);
+            }
+        }
+
+        /**
+         * 保存设置到 localStorage
+         */
+        function saveSettings() {
+            try {
+                const settings = {
+                    volume: Math.round(appState.volumeLevel * 100),
+                    focusSensitivity: Object.keys(FOCUS_SENSITIVITY_MAP).find(k => FOCUS_SENSITIVITY_MAP[k] === appState.focusThreshold) || 'medium',
+                    postureSensitivity: Object.keys(POSTURE_SENSITIVITY_MAP).find(k => POSTURE_SENSITIVITY_MAP[k] === appState.postureThreshold) || 'medium'
+                };
+                localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+            } catch (err) {
+                console.warn('保存设置失败:', err);
+            }
+        }
+
+        /**
+         * 更新灵敏度按钮高亮
+         * @param {string} groupId - 按钮组 DOM id
+         * @param {string} activeValue - 当前选中值
+         */
+        function updateSensitivityButtons(groupId, activeValue) {
+            try {
+                const group = document.getElementById(groupId);
+                if (!group) return;
+                const buttons = group.querySelectorAll('.sensitivity-btn');
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.value === activeValue);
+                });
+            } catch (err) {
+                console.warn('更新灵敏度按钮失败:', err);
+            }
+        }
+
+        // ==================== 历史记录 ====================
+
+        /**
+         * 从 localStorage 获取历史记录
+         * @returns {Array} 历史记录数组
+         */
+        function getHistory() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY_HISTORY);
+                if (!raw) return [];
+                return JSON.parse(raw);
+            } catch (err) {
+                console.warn('读取历史记录失败:', err);
+                return [];
+            }
+        }
+
+        /**
+         * 保存历史记录到 localStorage
+         * @param {Array} history - 历史记录数组
+         */
+        function saveHistory(history) {
+            try {
+                // 只保留最近 50 条
+                const trimmed = history.slice(-50);
+                localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(trimmed));
+            } catch (err) {
+                console.warn('保存历史记录失败:', err);
+            }
+        }
+
+        /**
+         * 记录本次作业到历史
+         */
+        function recordToHistory() {
+            try {
+                const history = getHistory();
+                const accuracy = appState.questionsTotal > 0
+                    ? Math.round((appState.questionsCorrect / appState.questionsTotal) * 100)
+                    : 0;
+                const record = {
+                    date: new Date().toLocaleString('zh-CN'),
+                    totalTime: formatTime(appState.elapsedSeconds),
+                    questions: appState.questionsTotal,
+                    accuracy: accuracy + '%',
+                    distractCount: appState.distractCount
+                };
+                history.push(record);
+                saveHistory(history);
+            } catch (err) {
+                console.warn('记录历史失败:', err);
+            }
+        }
+
+        /**
+         * 渲染总结弹窗中的历史列表（最近10条）
+         */
+        function renderSummaryHistory() {
+            try {
+                const history = getHistory();
+                const recent = history.slice(-10).reverse();
+                el.summaryHistoryList.innerHTML = '';
+                if (recent.length === 0) {
+                    el.summaryHistoryList.innerHTML = '<div class="history-empty">暂无历史记录</div>';
+                    return;
+                }
+                recent.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.innerHTML = `
+                        <span class="history-item-date">${item.date}</span>
+                        <div class="history-item-stats">
+                            <span>${item.totalTime}</span>
+                            <span>${item.questions}题</span>
+                            <span>${item.accuracy}</span>
+                            <span>走神${item.distractCount}次</span>
+                        </div>
+                    `;
+                    el.summaryHistoryList.appendChild(div);
+                });
+            } catch (err) {
+                console.warn('渲染总结历史失败:', err);
+            }
+        }
+
+        /**
+         * 渲染启动页历史弹窗
+         */
+        function renderHistoryModal() {
+            try {
+                const history = getHistory();
+                el.historyModalList.innerHTML = '';
+                if (history.length === 0) {
+                    el.historyModalList.innerHTML = '<div class="history-empty">暂无历史记录</div>';
+                    return;
+                }
+                // 表头
+                const header = document.createElement('div');
+                header.className = 'history-modal-item header';
+                header.innerHTML = '<span>日期</span><span>用时</span><span>题目</span><span>正确率</span><span>走神</span>';
+                el.historyModalList.appendChild(header);
+                // 最近记录倒序
+                const recent = history.slice(-20).reverse();
+                recent.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'history-modal-item';
+                    row.innerHTML = `
+                        <span>${item.date}</span>
+                        <span class="val">${item.totalTime}</span>
+                        <span class="val">${item.questions}</span>
+                        <span class="val">${item.accuracy}</span>
+                        <span class="val">${item.distractCount}</span>
+                    `;
+                    el.historyModalList.appendChild(row);
+                });
+            } catch (err) {
+                console.warn('渲染历史弹窗失败:', err);
+            }
+        }
 
         // ==================== 语音合成 ====================
         let speechSynth = window.speechSynthesis;
         let speechRecognition = null;
 
         /**
-         * 初始化语音识别
+         * 初始化语音识别（必须在 startBtn 点击后调用）
          */
         function initSpeechRecognition() {
-            const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognitionAPI) {
-                console.warn('浏览器不支持语音识别');
-                return;
+            try {
+                const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognitionAPI) {
+                    console.warn('浏览器不支持语音识别');
+                    return;
+                }
+                speechRecognition = new SpeechRecognitionAPI();
+                speechRecognition.lang = SPEECH_LANG;
+                speechRecognition.continuous = true;
+                speechRecognition.interimResults = false;
+
+                speechRecognition.onresult = (event) => {
+                    try {
+                        const transcript = event.results[event.results.length - 1][0].transcript;
+                        handleVoiceCommand(transcript);
+                    } catch (err) {
+                        console.warn('处理语音结果失败:', err);
+                    }
+                };
+
+                speechRecognition.onend = () => {
+                    // 自动重启（如果还在运行状态且未暂停）
+                    if (appState.isRunning && !appState.isPaused) {
+                        try {
+                            speechRecognition.start();
+                        } catch (e) {
+                            // 忽略重启错误
+                        }
+                    } else {
+                        setMicStatus(false);
+                    }
+                };
+
+                speechRecognition.onstart = () => {
+                    setMicStatus(true);
+                };
+
+                speechRecognition.onerror = (event) => {
+                    if (event.error !== 'no-speech' && event.error !== 'not-allowed' && event.error !== 'aborted') {
+                        console.warn('语音识别错误:', event.error);
+                    }
+                    if (event.error === 'not-allowed') {
+                        setMicStatus(false);
+                    }
+                };
+            } catch (err) {
+                console.warn('初始化语音识别失败:', err);
             }
-            speechRecognition = new SpeechRecognitionAPI();
-            speechRecognition.lang = SPEECH_LANG;
-            speechRecognition.continuous = true;
-            speechRecognition.interimResults = false;
+        }
 
-            speechRecognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript;
-                handleVoiceCommand(transcript);
-            };
-
-            speechRecognition.onend = () => {
-                // 自动重启（如果还在运行状态）
-                if (appState.isRunning) {
-                    try { speechRecognition.start(); } catch (e) {}
+        /**
+         * 更新麦克风状态图标
+         * @param {boolean} isListening - 是否正在监听
+         */
+        function setMicStatus(isListening) {
+            try {
+                appState.isListening = isListening;
+                if (el.micStatusIcon) {
+                    el.micStatusIcon.classList.toggle('listening', isListening);
                 }
-            };
-
-            speechRecognition.onerror = (event) => {
-                // not-allowed 和 no-speech 是正常的，不需要报错
-                if (event.error !== 'no-speech' && event.error !== 'not-allowed' && event.error !== 'aborted') {
-                    console.warn('语音识别错误:', event.error);
-                }
-            };
+            } catch (err) {
+                console.warn('更新麦克风状态失败:', err);
+            }
         }
 
         /**
@@ -1082,14 +1865,19 @@
          * @param {string} text - 播报内容
          */
         function speak(text) {
-            if (appState.isMuted || !speechSynth) return;
+            try {
+                if (appState.isMuted || !speechSynth) return;
 
-            speechSynth.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = SPEECH_LANG;
-            utterance.rate = 0.95;
-            utterance.pitch = 1.05;
-            speechSynth.speak(utterance);
+                speechSynth.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = SPEECH_LANG;
+                utterance.rate = 0.95;
+                utterance.pitch = 1.05;
+                utterance.volume = appState.volumeLevel;
+                speechSynth.speak(utterance);
+            } catch (err) {
+                console.warn('语音播报失败:', err);
+            }
         }
 
         /**
@@ -1097,9 +1885,14 @@
          * @param {string} text - 识别到的文字
          */
         function handleVoiceCommand(text) {
-            const lower = text.toLowerCase();
-            if (lower.includes('读题') || lower.includes('帮我') || lower.includes('读一下')) {
-                startReadQuestionFlow();
+            try {
+                const lower = text.toLowerCase();
+                if (lower.includes('读题') || lower.includes('帮我') || lower.includes('读一下')) {
+                    startReadQuestionFlow();
+                    showToast('语音指令：' + text, 'success');
+                }
+            } catch (err) {
+                console.warn('处理语音指令失败:', err);
             }
         }
 
@@ -1191,7 +1984,6 @@
             } catch (err) {
                 console.warn('摄像头不可用，使用演示模式:', err.message);
                 appState.cameraAvailable = false;
-                // 在视频区域显示提示
                 const placeholder = document.createElement('div');
                 placeholder.id = 'cameraPlaceholder';
                 placeholder.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a24;color:#a0a0b0;gap:12px;';
@@ -1265,13 +2057,11 @@
             const dims = faceapi.matchDimensions(el.overlayCanvas, el.video, true);
             const scaled = faceapi.resizeResults(detection, dims);
 
-            // 绘制检测框
             const box = scaled.detection.box;
             ctx.strokeStyle = '#4ecdc4';
             ctx.lineWidth = 2;
             ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-            // 绘制关键点
             if (scaled.landmarks) {
                 const points = scaled.landmarks.positions;
                 ctx.fillStyle = '#ff6b6b';
@@ -1300,24 +2090,21 @@
             const videoWidth = el.video.videoWidth || 640;
             const videoHeight = el.video.videoHeight || 480;
 
-            // 计算面部中心位置（相对于画面中心）
             const centerX = box.x + box.width / 2;
             const centerY = box.y + box.height / 2;
             const normX = centerX / videoWidth;
             const normY = centerY / videoHeight;
 
-            // 保存位置历史用于判断稳定性
             appState.lastFacePosition = { x: normX, y: normY, time: Date.now() };
 
-            // 判断坐姿：面部应该大致在画面中央偏上
             const isCentered = normX > 0.35 && normX < 0.65;
             const isProperHeight = normY > 0.2 && normY < 0.6;
 
             if (!isCentered || !isProperHeight) {
                 appState.postureIssues++;
-                if (appState.postureIssues >= 3) {
+                if (appState.postureIssues >= appState.postureThreshold) {
                     setPostureWarning(!isCentered ? '头部偏移' : '距离不当');
-                    if (appState.postureIssues === 3) {
+                    if (appState.postureIssues === appState.postureThreshold) {
                         speak('小朋友，请注意坐姿，坐端正一点哦');
                         addEvent('坐姿提醒：' + (!isCentered ? '头部偏移' : '距离不当'));
                     }
@@ -1367,18 +2154,15 @@
             const leftEye = landmarks.getLeftEye();
             const rightEye = landmarks.getRightEye();
 
-            // 计算眼睛纵横比（EAR）
             const leftEAR = calculateEAR(leftEye);
             const rightEAR = calculateEAR(rightEye);
             const avgEAR = (leftEAR + rightEAR) / 2;
 
-            // 保存历史
             appState.eyeOpenHistory.push(avgEAR);
             if (appState.eyeOpenHistory.length > 30) {
                 appState.eyeOpenHistory.shift();
             }
 
-            // 检测长时间闭眼或视线偏移
             const isEyesClosed = avgEAR < 0.2;
             const recentHistory = appState.eyeOpenHistory.slice(-10);
             const avgRecent = recentHistory.reduce((a, b) => a + b, 0) / recentHistory.length;
@@ -1392,7 +2176,6 @@
                 focusScore -= 30;
             }
 
-            // 面部偏离中心也降低专注度
             if (appState.lastFacePosition) {
                 const dx = Math.abs(appState.lastFacePosition.x - 0.5);
                 if (dx > 0.2) focusScore -= 20;
@@ -1401,15 +2184,13 @@
             focusScore = Math.max(0, Math.min(100, focusScore));
             updateFocusBar(focusScore);
 
-            // 走神检测
-            if (focusScore < 40 && !isEyesClosed) {
+            // 使用动态阈值
+            if (focusScore < appState.focusThreshold && !isEyesClosed) {
                 appState.distractCount++;
                 el.distractCount.textContent = appState.distractCount;
                 speak('小朋友，专心做作业哦，不要走神');
                 addEvent('走神提醒');
                 showToast('检测到走神，已语音提醒', 'warning');
-
-                // 防止连续触发
                 appState.eyeOpenHistory = [];
             }
         }
@@ -1441,14 +2222,12 @@
          * 启动读题流程
          */
         function startReadQuestionFlow() {
-            if (appState.isReadingMode) return;
+            if (appState.isReadingMode || appState.isPaused) return;
             appState.isReadingMode = true;
 
-            // 第一步：语音提示指定位置
             speak('请用手指在屏幕上框选题目开始的位置');
             showToast('请框选题目区域');
 
-            // 显示区域选择
             el.regionSelector.classList.add('active');
             setupRegionSelection();
         }
@@ -1508,7 +2287,6 @@
                 isDrawing = false;
                 e.preventDefault();
 
-                // 清除事件监听
                 canvas.removeEventListener('mousedown', onStart);
                 canvas.removeEventListener('mousemove', onMove);
                 canvas.removeEventListener('mouseup', onEnd);
@@ -1516,7 +2294,6 @@
                 canvas.removeEventListener('touchmove', onMove);
                 canvas.removeEventListener('touchend', onEnd);
 
-                // 进入变焦读题
                 el.regionSelector.classList.remove('active');
                 performZoomAndRead(startPos, endPos);
             }
@@ -1547,13 +2324,11 @@
                 return;
             }
 
-            // 显示读题覆盖层
             el.readingOverlay.classList.add('active');
             el.readingTitle.textContent = '正在读题';
             el.readingText.textContent = '正在识别题目内容...';
             el.readingHint.textContent = '请保持作业本稳定';
 
-            // 变焦到选中区域
             const sectionRect = el.videoSection.getBoundingClientRect();
             const scaleX = sectionRect.width / w;
             const scaleY = sectionRect.height / h;
@@ -1568,10 +2343,8 @@
             el.video.style.transform = `scaleX(-1) scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`;
             el.focalValue.textContent = `${(scale * FOCAL_DEFAULT).toFixed(1)}x`;
 
-            // 模拟OCR识别
             await wait(2000);
 
-            // 模拟识别结果
             const mockQuestions = [
                 '小明有 15 个苹果，给了小红 7 个，还剩几个？',
                 '计算：36 + 58 = ?',
@@ -1585,14 +2358,12 @@
 
             await wait(1000);
 
-            // 朗读题目
             speak(question);
             appState.questionsRead++;
             addEvent('语音读题：' + question.substring(0, 20) + '...');
 
             await wait(4000);
 
-            // 恢复焦距
             el.readingOverlay.classList.remove('active');
             el.video.style.transform = `scaleX(-1) scale(1)`;
             el.focalValue.textContent = `${FOCAL_DEFAULT}x`;
@@ -1616,13 +2387,12 @@
          * 提示检查作业
          */
         function promptCheckWork() {
+            if (appState.isPaused) return;
             speak('这一页做完了吗？做完的话请仔细检查一遍，看看有没有做错的地方');
             showToast('请检查作业', 'success');
             addEvent('提示检查作业');
 
-            // 模拟检查过程
             setTimeout(() => {
-                // 随机生成检查结果
                 const correct = Math.floor(Math.random() * 3) + 1;
                 const wrong = Math.floor(Math.random() * 2);
                 appState.questionsCorrect += correct;
@@ -1639,69 +2409,174 @@
          * 生成作业总结
          */
         function generateSummary() {
-            const totalSeconds = appState.elapsedSeconds;
-            const minutes = Math.floor(totalSeconds / 60);
-            const accuracy = appState.questionsTotal > 0
-                ? Math.round((appState.questionsCorrect / appState.questionsTotal) * 100)
-                : 0;
+            try {
+                const totalSeconds = appState.elapsedSeconds;
+                const minutes = Math.floor(totalSeconds / 60);
+                const accuracy = appState.questionsTotal > 0
+                    ? Math.round((appState.questionsCorrect / appState.questionsTotal) * 100)
+                    : 0;
 
-            document.getElementById('totalTime').textContent = formatTime(totalSeconds);
-            document.getElementById('totalQuestions').textContent = appState.questionsTotal;
-            document.getElementById('accuracyRate').textContent = `${accuracy}%`;
-            document.getElementById('summaryDate').textContent = new Date().toLocaleDateString('zh-CN', {
-                year: 'numeric', month: 'long', day: 'numeric'
-            });
+                document.getElementById('totalTime').textContent = formatTime(totalSeconds);
+                document.getElementById('totalQuestions').textContent = appState.questionsTotal;
+                document.getElementById('accuracyRate').textContent = `${accuracy}%`;
+                document.getElementById('summaryDate').textContent = new Date().toLocaleDateString('zh-CN', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
 
-            // 表现列表
-            const perfList = document.getElementById('performanceList');
-            perfList.innerHTML = '';
+                const perfList = document.getElementById('performanceList');
+                perfList.innerHTML = '';
 
-            const goodPosture = appState.postureIssues < 5;
-            const goodFocus = appState.distractCount < 3;
+                const goodPosture = appState.postureIssues < 5;
+                const goodFocus = appState.distractCount < 3;
 
-            const items = [
-                { good: goodPosture, text: goodPosture ? '坐姿保持良好，未出现明显歪斜' : '坐姿有几次偏移，需要继续注意' },
-                { good: goodFocus, text: goodFocus ? '专注度不错，很少走神' : `走神被提醒 ${appState.distractCount} 次，专注力需提升` },
-                { good: appState.questionsRead > 0, text: `使用读题功能 ${appState.questionsRead} 次` }
-            ];
+                const items = [
+                    { good: goodPosture, text: goodPosture ? '坐姿保持良好，未出现明显歪斜' : '坐姿有几次偏移，需要继续注意' },
+                    { good: goodFocus, text: goodFocus ? '专注度不错，很少走神' : `走神被提醒 ${appState.distractCount} 次，专注力需提升` },
+                    { good: appState.questionsRead > 0, text: `使用读题功能 ${appState.questionsRead} 次` }
+                ];
 
-            for (const item of items) {
-                const div = document.createElement('div');
-                div.className = 'summary-item' + (item.good ? '' : ' warning');
-                div.innerHTML = `
-                    <svg viewBox="0 0 24 24"><path d="${item.good ? 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' : 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'}"/></svg>
-                    ${item.text}
-                `;
-                perfList.appendChild(div);
+                for (const item of items) {
+                    const div = document.createElement('div');
+                    div.className = 'summary-item' + (item.good ? '' : ' warning');
+                    div.innerHTML = `
+                        <svg viewBox="0 0 24 24"><path d="${item.good ? 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' : 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'}"/></svg>
+                        ${item.text}
+                    `;
+                    perfList.appendChild(div);
+                }
+
+                const impList = document.getElementById('improveList');
+                impList.innerHTML = '';
+                const improvements = [];
+                if (!goodPosture) improvements.push('注意保持正确坐姿，背部挺直');
+                if (!goodFocus) improvements.push('提高专注力，减少走神次数');
+                if (accuracy < 80) improvements.push('提高做题准确率，认真审题');
+                if (improvements.length === 0) improvements.push('继续保持，表现很棒！');
+
+                for (const text of improvements) {
+                    const div = document.createElement('div');
+                    div.className = 'summary-item' + (text.includes('继续') ? '' : ' warning');
+                    div.innerHTML = `
+                        <svg viewBox="0 0 24 24"><path d="${text.includes('继续') ? 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' : 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'}"/></svg>
+                        ${text}
+                    `;
+                    impList.appendChild(div);
+                }
+
+                // 渲染历史记录
+                renderSummaryHistory();
+
+                el.summaryModal.classList.add('active');
+
+                const summaryText = `本次作业共用时 ${minutes} 分钟，完成 ${appState.questionsTotal} 题，正确率 ${accuracy}%。` +
+                    (goodFocus ? '专注力不错。' : `走神了 ${appState.distractCount} 次，下次要注意。`) +
+                    '继续加油！';
+                speak(summaryText);
+                addEvent('生成作业总结');
+            } catch (err) {
+                console.warn('生成总结失败:', err);
             }
+        }
 
-            // 改进列表
-            const impList = document.getElementById('improveList');
-            impList.innerHTML = '';
-            const improvements = [];
-            if (!goodPosture) improvements.push('注意保持正确坐姿，背部挺直');
-            if (!goodFocus) improvements.push('提高专注力，减少走神次数');
-            if (accuracy < 80) improvements.push('提高做题准确率，认真审题');
-            if (improvements.length === 0) improvements.push('继续保持，表现很棒！');
+        // ==================== 暂停/恢复 ====================
 
-            for (const text of improvements) {
-                const div = document.createElement('div');
-                div.className = 'summary-item' + (text.includes('继续') ? '' : ' warning');
-                div.innerHTML = `
-                    <svg viewBox="0 0 24 24"><path d="${text.includes('继续') ? 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z' : 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'}"/></svg>
-                    ${text}
-                `;
-                impList.appendChild(div);
+        /**
+         * 切换暂停状态
+         */
+        function togglePause() {
+            try {
+                appState.isPaused = !appState.isPaused;
+
+                if (appState.isPaused) {
+                    // 暂停
+                    appState.detectionPaused = true;
+                    if (speechRecognition && appState.isListening) {
+                        try { speechRecognition.stop(); } catch (e) {}
+                    }
+                    el.pauseOverlay.classList.add('active');
+                    el.timer.classList.add('paused');
+                    el.statusText.textContent = '已暂停';
+                    el.pauseBtn.querySelector('span').textContent = '继续';
+                    el.pauseBtn.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                    el.readBtn.classList.add('disabled');
+                    el.checkBtn.classList.add('disabled');
+                    showToast('已暂停', 'warning');
+                } else {
+                    // 恢复
+                    appState.detectionPaused = false;
+                    if (speechRecognition && appState.isRunning) {
+                        try { speechRecognition.start(); } catch (e) {}
+                    }
+                    el.pauseOverlay.classList.remove('active');
+                    el.timer.classList.remove('paused');
+                    el.statusText.textContent = '监控中';
+                    el.pauseBtn.querySelector('span').textContent = '暂停';
+                    el.pauseBtn.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                    el.readBtn.classList.remove('disabled');
+                    el.checkBtn.classList.remove('disabled');
+                    showToast('已恢复', 'success');
+                }
+            } catch (err) {
+                console.warn('切换暂停状态失败:', err);
             }
+        }
 
-            el.summaryModal.classList.add('active');
+        /**
+         * 重置 appState 开始新作业
+         */
+        function resetForNewHomework() {
+            try {
+                // 先记录上一轮
+                recordToHistory();
 
-            // 语音总结
-            const summaryText = `本次作业共用时 ${minutes} 分钟，完成 ${appState.questionsTotal} 题，正确率 ${accuracy}%。` +
-                (goodFocus ? '专注力不错。' : `走神了 ${appState.distractCount} 次，下次要注意。`) +
-                '继续加油！';
-            speak(summaryText);
-            addEvent('生成作业总结');
+                appState.isRunning = true;
+                appState.isPaused = false;
+                appState.isReadingMode = false;
+                appState.detectionPaused = false;
+                appState.sessionStartTime = Date.now();
+                appState.elapsedSeconds = 0;
+                appState.distractCount = 0;
+                appState.postureIssues = 0;
+                appState.questionsRead = 0;
+                appState.questionsCorrect = 0;
+                appState.questionsTotal = 0;
+                appState.eventHistory = [];
+                appState.faceDetected = false;
+                appState.lastFacePosition = null;
+                appState.eyeOpenHistory = [];
+
+                // 重置 UI
+                el.timer.textContent = '00:00';
+                el.timer.classList.remove('paused');
+                el.statusText.textContent = '监控中';
+                el.distractCount.textContent = '0';
+                el.focusBar.style.width = '85%';
+                el.pauseOverlay.classList.remove('active');
+                el.pauseBtn.querySelector('span').textContent = '暂停';
+                el.pauseBtn.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                el.readBtn.classList.remove('disabled');
+                el.checkBtn.classList.remove('disabled');
+                setPostureGood();
+
+                // 清空事件日志
+                el.eventLog.innerHTML = '';
+                addEvent('开始新作业');
+
+                // 关闭总结弹窗
+                el.summaryModal.classList.remove('active');
+
+                // 重启语音识别
+                if (speechRecognition) {
+                    try { speechRecognition.stop(); } catch (e) {}
+                    setTimeout(() => {
+                        try { speechRecognition.start(); } catch (e2) {}
+                    }, 300);
+                }
+
+                speak('新作业开始，加油哦');
+            } catch (err) {
+                console.warn('重置新作业失败:', err);
+            }
         }
 
         // ==================== 主循环 ====================
@@ -1711,6 +2586,10 @@
          */
         async function detectionLoop() {
             if (!appState.isRunning) return;
+            if (appState.detectionPaused) {
+                requestAnimationFrame(detectionLoop);
+                return;
+            }
 
             try {
                 if (appState.modelsLoaded && appState.cameraAvailable) {
@@ -1735,14 +2614,18 @@
          * 计时器更新
          */
         function startTimer() {
-            setInterval(() => {
-                if (!appState.isRunning) return;
+            if (appState.timerIntervalId) clearInterval(appState.timerIntervalId);
+            appState.timerIntervalId = setInterval(() => {
+                if (!appState.isRunning || appState.isPaused) return;
                 appState.elapsedSeconds++;
                 el.timer.textContent = formatTime(appState.elapsedSeconds);
             }, 1000);
         }
 
         // ==================== 事件绑定 ====================
+
+        // 页面加载时恢复设置
+        loadSettings();
 
         el.startBtn.addEventListener('click', async () => {
             el.loadingOverlay.classList.add('active');
@@ -1760,6 +2643,7 @@
                 appState.isRunning = true;
                 appState.sessionStartTime = Date.now();
 
+                // 在 startBtn 点击后调用语音识别初始化
                 initSpeechRecognition();
                 if (speechRecognition) {
                     try { speechRecognition.start(); } catch (e) {}
@@ -1776,29 +2660,175 @@
             }
         });
 
-        el.readBtn.addEventListener('click', () => startReadQuestionFlow());
+        el.readBtn.addEventListener('click', () => {
+            if (appState.isPaused) return;
+            startReadQuestionFlow();
+        });
 
-        el.checkBtn.addEventListener('click', () => promptCheckWork());
+        el.checkBtn.addEventListener('click', () => {
+            if (appState.isPaused) return;
+            promptCheckWork();
+        });
 
-        el.finishBtn.addEventListener('click', () => {
+        // 暂停按钮
+        el.pauseBtn.addEventListener('click', () => togglePause());
+
+        // 结束按钮（弹出确认）
+        el.stopBtn.addEventListener('click', () => {
+            el.confirmOverlay.classList.add('active');
+        });
+
+        el.confirmCancelBtn.addEventListener('click', () => {
+            el.confirmOverlay.classList.remove('active');
+        });
+
+        el.confirmOkBtn.addEventListener('click', () => {
+            el.confirmOverlay.classList.remove('active');
+            appState.isRunning = false;
+            appState.isPaused = false;
+            appState.detectionPaused = false;
+            if (speechRecognition) {
+                try { speechRecognition.stop(); } catch (e) {}
+            }
+            if (appState.timerIntervalId) {
+                clearInterval(appState.timerIntervalId);
+                appState.timerIntervalId = null;
+            }
+            // 记录历史
+            recordToHistory();
+            generateSummary();
+        });
+
+        // 音量切换按钮（改进1：循环切换正常/静音 + 图标切换）
+        const SPEAKER_ICON = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+        const MUTE_ICON = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+
+        el.muteBtn.addEventListener('click', () => {
+            appState.isMuted = !appState.isMuted;
+            el.muteBtn.querySelector('svg').innerHTML = appState.isMuted ? MUTE_ICON : SPEAKER_ICON;
+            el.muteBtn.style.opacity = appState.isMuted ? '0.5' : '1';
+            showToast(appState.isMuted ? '已静音' : '已开启声音');
+        });
+
+        // 侧边栏音量滑块
+        el.volumeSlider.addEventListener('input', () => {
+            try {
+                const val = parseInt(el.volumeSlider.value, 10);
+                appState.volumeLevel = val / 100;
+                el.volumeValue.textContent = val + '%';
+                // 如果滑块拉到 0，视为静音
+                if (val === 0) {
+                    appState.isMuted = true;
+                    el.muteBtn.querySelector('svg').innerHTML = MUTE_ICON;
+                    el.muteBtn.style.opacity = '0.5';
+                } else {
+                    appState.isMuted = false;
+                    el.muteBtn.querySelector('svg').innerHTML = SPEAKER_ICON;
+                    el.muteBtn.style.opacity = '1';
+                }
+                // 同步设置面板滑块
+                if (el.settingsVolumeSlider) {
+                    el.settingsVolumeSlider.value = val;
+                    el.settingsVolumeValue.textContent = val + '%';
+                }
+                saveSettings();
+            } catch (err) {
+                console.warn('音量滑块事件失败:', err);
+            }
+        });
+
+        // 设置按钮
+        el.settingsBtn.addEventListener('click', () => {
+            el.settingsPanelOverlay.classList.add('active');
+            // 同步当前音量到设置面板
+            const volPercent = Math.round(appState.volumeLevel * 100);
+            el.settingsVolumeSlider.value = volPercent;
+            el.settingsVolumeValue.textContent = volPercent + '%';
+        });
+
+        // 设置面板关闭
+        el.closeSettingsBtn.addEventListener('click', () => {
+            el.settingsPanelOverlay.classList.remove('active');
+        });
+
+        // 设置面板音量滑块
+        el.settingsVolumeSlider.addEventListener('input', () => {
+            try {
+                const val = parseInt(el.settingsVolumeSlider.value, 10);
+                appState.volumeLevel = val / 100;
+                el.settingsVolumeValue.textContent = val + '%';
+                // 同步侧边栏滑块
+                if (el.volumeSlider) {
+                    el.volumeSlider.value = val;
+                    el.volumeValue.textContent = val + '%';
+                }
+                if (val === 0) {
+                    appState.isMuted = true;
+                    el.muteBtn.querySelector('svg').innerHTML = MUTE_ICON;
+                    el.muteBtn.style.opacity = '0.5';
+                } else {
+                    appState.isMuted = false;
+                    el.muteBtn.querySelector('svg').innerHTML = SPEAKER_ICON;
+                    el.muteBtn.style.opacity = '1';
+                }
+                saveSettings();
+            } catch (err) {
+                console.warn('设置面板音量失败:', err);
+            }
+        });
+
+        // 灵敏度按钮事件
+        function setupSensitivityButtons(groupId, mapKey, stateKey) {
+            try {
+                const group = document.getElementById(groupId);
+                if (!group) return;
+                const buttons = group.querySelectorAll('.sensitivity-btn');
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        buttons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        const val = btn.dataset.value;
+                        if (mapKey === 'focus') {
+                            appState.focusThreshold = FOCUS_SENSITIVITY_MAP[val];
+                        } else {
+                            appState.postureThreshold = POSTURE_SENSITIVITY_MAP[val];
+                        }
+                        saveSettings();
+                    });
+                });
+            } catch (err) {
+                console.warn('设置灵敏度按钮失败:', err);
+            }
+        }
+
+        setupSensitivityButtons('focusSensitivityGroup', 'focus', 'focusThreshold');
+        setupSensitivityButtons('postureSensitivityGroup', 'posture', 'postureThreshold');
+
+        // 总结弹窗 - 开始新作业
+        el.newHomeworkBtn.addEventListener('click', () => resetForNewHomework());
+
+        // 总结弹窗 - 关闭（回到启动页）
+        el.closeSummaryBtn.addEventListener('click', () => {
+            el.summaryModal.classList.remove('active');
             appState.isRunning = false;
             if (speechRecognition) {
                 try { speechRecognition.stop(); } catch (e) {}
             }
-            generateSummary();
+            if (appState.timerIntervalId) {
+                clearInterval(appState.timerIntervalId);
+                appState.timerIntervalId = null;
+            }
+            location.reload();
         });
 
-        if (el.closeSummaryBtn) {
-            el.closeSummaryBtn.addEventListener('click', () => {
-                el.summaryModal.classList.remove('active');
-                location.reload();
-            });
-        }
+        // 启动页查看历史
+        el.viewHistoryBtn.addEventListener('click', () => {
+            renderHistoryModal();
+            el.historyModalOverlay.classList.add('active');
+        });
 
-        el.muteBtn.addEventListener('click', () => {
-            appState.isMuted = !appState.isMuted;
-            el.muteBtn.style.opacity = appState.isMuted ? '0.5' : '1';
-            showToast(appState.isMuted ? '已静音' : '已开启声音');
+        el.closeHistoryModalBtn.addEventListener('click', () => {
+            el.historyModalOverlay.classList.remove('active');
         });
 
         window.addEventListener('resize', resizeCanvas);
