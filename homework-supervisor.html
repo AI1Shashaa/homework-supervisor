@@ -813,13 +813,13 @@
             text-align: right;
         }
 
-        /* 麦克风常驻图标 */
+        /* 语音助手按钮 */
         .mic-status-icon {
             position: absolute;
             top: 16px;
             right: 16px;
-            width: 32px;
-            height: 32px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -828,21 +828,76 @@
             backdrop-filter: blur(8px);
             z-index: 30;
             transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
         }
 
+        .mic-status-icon:active { transform: scale(0.9); }
+
         .mic-status-icon svg {
-            width: 18px;
-            height: 18px;
+            width: 22px;
+            height: 22px;
             fill: #666;
         }
 
-        .mic-status-icon.listening svg {
-            fill: var(--success);
-        }
+        .mic-status-icon.listening svg { fill: #4ecdc4; }
 
         .mic-status-icon.listening {
-            box-shadow: 0 0 12px rgba(29, 209, 161, 0.5);
+            border-color: #4ecdc4;
+            box-shadow: 0 0 12px rgba(78, 205, 196, 0.4);
         }
+
+        /* 语音命令面板 */
+        .voice-command-panel {
+            position: absolute;
+            top: 70px;
+            right: 16px;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 35;
+            min-width: 180px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        .voice-command-panel.active { display: flex; }
+
+        .voice-cmd-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.06);
+            color: #f0f0f5;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .voice-cmd-btn:active {
+            transform: scale(0.96);
+            background: rgba(78, 205, 196, 0.15);
+        }
+
+        .voice-cmd-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #4ecdc4;
+            flex-shrink: 0;
+        }
+
+        .voice-cmd-btn .cmd-label { flex: 1; text-align: left; }
+        .voice-cmd-btn .cmd-hint { font-size: 11px; color: #888; margin-top: 2px; }
+        .voice-panel-title { font-size: 12px; color: #888; padding: 0 4px 4px; font-weight: 600; }
+        .voice-cmd-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; }
 
         /* 暂停遮罩 */
         .pause-overlay {
@@ -1269,9 +1324,43 @@
                     焦距: <span id="focalValue">0.5x</span>
                 </div>
 
-                <!-- 麦克风状态图标 -->
+                <!-- 语音助手按钮 -->
                 <div class="mic-status-icon" id="micStatusIcon">
                     <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                </div>
+
+                <!-- 语音命令面板 -->
+                <div class="voice-command-panel" id="voiceCommandPanel">
+                    <div class="voice-panel-title">语音助手</div>
+                    <button class="voice-cmd-btn" data-cmd="read">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        <div>
+                            <div class="cmd-label">帮我读题</div>
+                            <div class="cmd-hint">识别并朗读题目</div>
+                        </div>
+                    </button>
+                    <button class="voice-cmd-btn" data-cmd="check">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <div>
+                            <div class="cmd-label">检查作业</div>
+                            <div class="cmd-hint">检查对错统计</div>
+                        </div>
+                    </button>
+                    <div class="voice-cmd-divider"></div>
+                    <button class="voice-cmd-btn" data-cmd="pause">
+                        <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        <div>
+                            <div class="cmd-label">暂停/继续</div>
+                            <div class="cmd-hint">暂停或恢复监督</div>
+                        </div>
+                    </button>
+                    <button class="voice-cmd-btn" data-cmd="finish">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        <div>
+                            <div class="cmd-label">结束作业</div>
+                            <div class="cmd-hint">生成总结报告</div>
+                        </div>
+                    </button>
                 </div>
 
                 <!-- 语音指示器 -->
@@ -1581,6 +1670,7 @@
             stopBtn: document.getElementById('stopBtn'),
             pauseOverlay: document.getElementById('pauseOverlay'),
             micStatusIcon: document.getElementById('micStatusIcon'),
+            voiceCommandPanel: document.getElementById('voiceCommandPanel'),
             settingsBtn: document.getElementById('settingsBtn'),
             settingsPanelOverlay: document.getElementById('settingsPanelOverlay'),
             settingsVolumeSlider: document.getElementById('settingsVolumeSlider'),
@@ -2803,6 +2893,44 @@
             el.muteBtn.querySelector('svg').innerHTML = appState.isMuted ? MUTE_ICON : SPEAKER_ICON;
             el.muteBtn.style.opacity = appState.isMuted ? '0.5' : '1';
             showToast(appState.isMuted ? '已静音' : '已开启声音');
+        });
+
+        // 语音助手按钮 - 点击弹出/收起命令面板
+        el.micStatusIcon.addEventListener('click', () => {
+            el.voiceCommandPanel.classList.toggle('active');
+        });
+
+        // 点击视频区域其他地方关闭面板
+        el.videoSection.addEventListener('click', (e) => {
+            if (!el.voiceCommandPanel.contains(e.target) && e.target !== el.micStatusIcon) {
+                el.voiceCommandPanel.classList.remove('active');
+            }
+        });
+
+        // 命令面板按钮
+        el.voiceCommandPanel.querySelectorAll('.voice-cmd-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const cmd = btn.dataset.cmd;
+                el.voiceCommandPanel.classList.remove('active');
+
+                switch (cmd) {
+                    case 'read':
+                        if (!appState.isPaused) startReadQuestionFlow();
+                        else showToast('当前已暂停，请先恢复', 'warning');
+                        break;
+                    case 'check':
+                        if (!appState.isPaused) promptCheckWork();
+                        else showToast('当前已暂停，请先恢复', 'warning');
+                        break;
+                    case 'pause':
+                        togglePause();
+                        break;
+                    case 'finish':
+                        el.confirmOverlay.classList.add('active');
+                        break;
+                }
+            });
         });
 
         // 侧边栏音量滑块
