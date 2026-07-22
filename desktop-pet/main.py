@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Windows 桌面宠物：透明无边框、置顶、可拖动，点击互动并弹出中文气泡。"""
+"""Windows 桌面宠物：透明置顶、可拖动；待机摇尾巴/转头，点击互动。"""
 
 from __future__ import annotations
 
+import json
 import math
 import random
 import sys
+import time
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt, QTimer, QEasingCurve
+from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, QEasingCurve
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
     QColor,
-    QCursor,
     QFont,
     QGuiApplication,
     QImage,
@@ -23,6 +24,7 @@ from PySide6.QtGui import (
     QPainterPath,
     QPen,
     QPixmap,
+    QTransform,
     QWheelEvent,
 )
 from PySide6.QtWidgets import QApplication, QMenu, QWidget
@@ -50,6 +52,8 @@ DIALOGUES = [
     "爪巴爪巴～你是我的人。",
     "检测到人类，启动卖萌。",
     "今天也是被rua的一天。",
+    "尾巴摇起来，好运来！",
+    "我在听哦，继续说～",
 ]
 
 
@@ -92,22 +96,58 @@ class DesktopPet(QWidget):
         self._interaction_index = 0
         self._interactions = ("jump", "squash", "shake")
 
-        src = QImage(str(resource_path("assets", "cat.png")))
-        if src.isNull():
-            raise FileNotFoundError("找不到资源 assets/cat.png")
-        self._source = src.convertToFormat(QImage.Format.Format_ARGB32)
+        # 待机动画：尾巴摇摆、头部轻晃
+        self._idle_t0 = time.perf_counter()
+        self._tail_angle = 0.0
+        self._head_angle = 0.0
+        self._head_bob_x = 0.0
+        self._head_bob_y = 0.0
+        self._idle_boost = 1.0  # 点击互动时短暂加速摇摆
+
+        self._load_layers()
 
         self._anim_timer = QTimer(self)
         self._anim_timer.setInterval(16)
         self._anim_timer.timeout.connect(self._on_anim_tick)
 
+        self._idle_timer = QTimer(self)
+        self._idle_timer.setInterval(33)  # ~30fps 待机足够顺滑
+        self._idle_timer.timeout.connect(self._on_idle_tick)
+        self._idle_timer.start()
+
         self._bubble_timer = QTimer(self)
         self._bubble_timer.setSingleShot(True)
         self._bubble_timer.timeout.connect(self._hide_bubble)
 
+        self._boost_timer = QTimer(self)
+        self._boost_timer.setSingleShot(True)
+        self._boost_timer.timeout.connect(self._reset_idle_boost)
+
         self._rebuild_pixmap()
         self._relayout()
         self._place_initial()
+
+    def _load_layers(self) -> None:
+        assets = resource_path("assets")
+        meta_path = assets / "layers.json"
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+
+        def load(name: str) -> QImage:
+            img = QImage(str(assets / name))
+            if img.isNull():
+                raise FileNotFoundError(f"找不到资源 assets/{name}")
+            return img.convertToFormat(QImage.Format.Format_ARGB32)
+
+        # 全图用于尺寸与兼容；分层用于待机动画
+        self._source = load("cat.png")
+        self._body_src = load("cat_body.png")
+        self._head_src = load("cat_head.png")
+        self._tail_src = load("cat_tail.png")
+
+        self._src_w = meta["width"]
+        self._src_h = meta["height"]
+        self._tail_pivot_src = QPointF(meta["tail_pivot"]["x"], meta["tail_pivot"]["y"])
+        self._head_pivot_src = QPointF(meta["head_pivot"]["x"], meta["head_pivot"]["y"])
 
     # ----- 尺寸 / 布局 -----
     def _pet_draw_size(self) -> QSize:
@@ -124,25 +164,36 @@ class DesktopPet(QWidget):
 
     def _rebuild_pixmap(self) -> None:
         size = self._pet_draw_size()
-        self._pet_pixmap = QPixmap.fromImage(
-            self._source.scaled(
-                size,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
+
+        def scale_img(src: QImage) -> QPixmap:
+            return QPixmap.fromImage(
+                src.scaled(
+                    size,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
             )
-        )
+
+        self._pet_pixmap = scale_img(self._source)
+        self._body_pix = scale_img(self._body_src)
+        self._head_pix = scale_img(self._head_src)
+        self._tail_pix = scale_img(self._tail_src)
+
+        sx = size.width() / max(1, self._src_w)
+        sy = size.height() / max(1, self._src_h)
+        self._tail_pivot = QPointF(self._tail_pivot_src.x() * sx, self._tail_pivot_src.y() * sy)
+        self._head_pivot = QPointF(self._head_pivot_src.x() * sx, self._head_pivot_src.y() * sy)
 
     def _relayout(self) -> None:
         pet = self._pet_draw_size()
         m = self._margin()
         bubble_h = self._bubble_reserved_height()
-        # 上方留给气泡与跳跃；左右留给抖动；底部仅小边距，角色贴底更自然
+        # 上方留给气泡与跳跃；左右留给抖动与尾巴摆动
         jump_room = max(48, int(96 * self._scale))
-        extra_x = max(28, int(48 * self._scale))
+        extra_x = max(36, int(56 * self._scale))
         bottom_m = max(8, int(10 * self._scale))
         w = pet.width() + m * 2 + extra_x * 2
         h = pet.height() + bubble_h + jump_room + bottom_m
-        # 缩放时保持角色底部大致不动
         old_geo = self.geometry()
         old_bottom = old_geo.bottom() if old_geo.height() else None
         old_cx = old_geo.center().x() if old_geo.width() else None
@@ -163,7 +214,6 @@ class DesktopPet(QWidget):
     def _pet_rect(self) -> QRect:
         pet = self._pet_draw_size()
         bottom_m = max(8, int(10 * self._scale))
-        # 角色贴窗口底部，上方留给气泡与跳跃
         x = (self.width() - pet.width()) // 2 + self._offset.x()
         y = self.height() - bottom_m - pet.height() + self._offset.y()
         return QRect(x, y, pet.width(), pet.height())
@@ -182,13 +232,39 @@ class DesktopPet(QWidget):
         painter.translate(cx, bottom)
         painter.scale(self._squash_x, self._squash_y)
         painter.translate(-pet_rect.width() / 2, -pet_rect.height())
-        painter.drawPixmap(0, 0, self._pet_pixmap)
+        self._paint_pet_layers(painter, QRect(0, 0, pet_rect.width(), pet_rect.height()))
         painter.restore()
 
         if self._bubble_visible and self._bubble_text:
             self._paint_bubble(painter, pet_rect)
 
         painter.end()
+
+    def _paint_pet_layers(self, painter: QPainter, local_rect: QRect) -> None:
+        """在本地坐标系绘制：完整底图 → 摇尾巴 → 转头（叠加以避免接缝）。"""
+        origin = QPointF(local_rect.topLeft())
+
+        # 1) 完整角色打底，避免分层抠图产生白边/空洞
+        painter.drawPixmap(local_rect.topLeft(), self._pet_pixmap)
+
+        # 2) 尾巴：绕附着点旋转叠在上方
+        painter.save()
+        pivot = origin + self._tail_pivot
+        painter.translate(pivot)
+        painter.rotate(self._tail_angle)
+        painter.translate(-pivot)
+        painter.drawPixmap(local_rect.topLeft(), self._tail_pix)
+        painter.restore()
+
+        # 3) 头部：轻微旋转 + 位移叠在上方
+        painter.save()
+        pivot = origin + self._head_pivot
+        painter.translate(pivot)
+        painter.translate(self._head_bob_x, self._head_bob_y)
+        painter.rotate(self._head_angle)
+        painter.translate(-pivot)
+        painter.drawPixmap(local_rect.topLeft(), self._head_pix)
+        painter.restore()
 
     def _paint_bubble(self, painter: QPainter, pet_rect: QRect) -> None:
         text = self._bubble_text
@@ -207,7 +283,6 @@ class DesktopPet(QWidget):
         bw = tw + pad_x * 2
         bh = th + pad_y * 2
 
-        # 气泡放在角色头顶上方，绝不遮挡角色
         bx = pet_rect.center().x() - bw // 2
         by = pet_rect.top() - bh - max(10, int(14 * self._scale))
         bx = max(8, min(bx, self.width() - bw - 8))
@@ -215,7 +290,6 @@ class DesktopPet(QWidget):
 
         path = QPainterPath()
         path.addRoundedRect(bx, by, bw, bh, 12, 12)
-        # 小三角指向角色
         tip_x = pet_rect.center().x()
         tip_x = max(bx + 16, min(tip_x, bx + bw - 16))
         tri = QPainterPath()
@@ -232,6 +306,32 @@ class DesktopPet(QWidget):
         painter.setPen(QColor(30, 30, 30, alpha))
         painter.drawText(QRect(bx, by, bw, bh), Qt.AlignmentFlag.AlignCenter, text)
 
+    # ----- 待机动画 -----
+    def _on_idle_tick(self) -> None:
+        t = time.perf_counter() - self._idle_t0
+        boost = self._idle_boost
+
+        # 尾巴：主频 + 轻微二次谐波，看起来更像真猫摇尾巴
+        self._tail_angle = (
+            math.sin(t * 3.2 * boost) * 16.0
+            + math.sin(t * 5.1 * boost + 0.6) * 4.0
+        )
+
+        # 头部：慢速左右轻转 + 轻微点头/侧移
+        self._head_angle = (
+            math.sin(t * 1.15 * boost + 0.4) * 5.5
+            + math.sin(t * 0.55 + 1.2) * 2.0
+        )
+        self._head_bob_x = math.sin(t * 0.9 * boost) * (2.2 * self._scale)
+        self._head_bob_y = math.sin(t * 1.7 * boost + 0.8) * (1.4 * self._scale)
+
+        # 互动动画期间也保持刷新；无互动时只靠 idle 刷新
+        if not self._anim_timer.isActive():
+            self.update()
+
+    def _reset_idle_boost(self) -> None:
+        self._idle_boost = 1.0
+
     # ----- 互动动画 -----
     def _trigger_interaction(self) -> None:
         if self._anim_timer.isActive():
@@ -247,6 +347,9 @@ class DesktopPet(QWidget):
         else:
             self._anim_duration = 480.0
         self._show_bubble(random.choice(DIALOGUES))
+        # 点击时尾巴摇得更欢一会儿
+        self._idle_boost = 1.85
+        self._boost_timer.start(1600)
         self._anim_timer.start()
 
     def _ease_out_cubic(self, t: float) -> float:
@@ -262,7 +365,6 @@ class DesktopPet(QWidget):
         kind = self._anim_kind
 
         if kind == "jump":
-            # 上抛再落下
             if t < 0.45:
                 p = self._ease_out_cubic(t / 0.45)
                 self._offset.setY(int(-90 * self._scale * p))
@@ -271,7 +373,6 @@ class DesktopPet(QWidget):
                 p = (t - 0.45) / 0.55
                 p = self._ease_in_out(p)
                 self._offset.setY(int(-90 * self._scale * (1.0 - p)))
-                # 落地轻微压扁
                 land = math.sin(p * math.pi)
                 self._squash_x = 1.0 + 0.12 * land
                 self._squash_y = 1.0 - 0.12 * land
@@ -349,7 +450,6 @@ class DesktopPet(QWidget):
         super().mouseReleaseEvent(event)
 
     def _pet_hit_test(self, local_pos: QPoint) -> bool:
-        """仅点击到角色不透明区域才触发互动（近似用包围盒）。"""
         return self._pet_rect().adjusted(-8, -8, 8, 8).contains(local_pos)
 
     def wheelEvent(self, event: QWheelEvent) -> None:  # noqa: N802
@@ -400,7 +500,6 @@ class DesktopPet(QWidget):
         flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool
         if self._always_on_top:
             flags |= Qt.WindowType.WindowStaysOnTopHint
-        # 切换 flags 需要 hide/show
         self.hide()
         self.setWindowFlags(flags)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
