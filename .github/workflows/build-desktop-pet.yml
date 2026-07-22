@@ -1,0 +1,41 @@
+name: Build Desktop Pet (Windows)
+
+on:
+  push:
+    paths:
+      - "desktop-pet/**"
+      - ".github/workflows/build-desktop-pet.yml"
+  pull_request:
+    paths:
+      - "desktop-pet/**"
+      - ".github/workflows/build-desktop-pet.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop-pet
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Build EXE
+        run: python -m PyInstaller --noconfirm desktop_pet.spec
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DesktopPet-windows
+          path: desktop-pet/dist/DesktopPet.exe
+          if-no-files-found: error
