@@ -111,7 +111,7 @@ class DesktopPet(QWidget):
         self._anim_timer.timeout.connect(self._on_anim_tick)
 
         self._idle_timer = QTimer(self)
-        self._idle_timer.setInterval(33)  # ~30fps 待机足够顺滑
+        self._idle_timer.setInterval(16)  # ~60fps，尾巴持续摆动更跟手
         self._idle_timer.timeout.connect(self._on_idle_tick)
         self._idle_timer.start()
 
@@ -241,13 +241,13 @@ class DesktopPet(QWidget):
         painter.end()
 
     def _paint_pet_layers(self, painter: QPainter, local_rect: QRect) -> None:
-        """在本地坐标系绘制：完整底图 → 摇尾巴 → 转头（叠加以避免接缝）。"""
+        """身体打底（无头尾）→ 持续摇尾巴 → 转头。"""
         origin = QPointF(local_rect.topLeft())
 
-        # 1) 完整角色打底，避免分层抠图产生白边/空洞
-        painter.drawPixmap(local_rect.topLeft(), self._pet_pixmap)
+        # 1) 无头尾的身体：静态尾巴不会挡住动画层
+        painter.drawPixmap(local_rect.topLeft(), self._body_pix)
 
-        # 2) 尾巴：绕附着点旋转叠在上方
+        # 2) 尾巴：绕附着点持续摇摆
         painter.save()
         pivot = origin + self._tail_pivot
         painter.translate(pivot)
@@ -256,7 +256,7 @@ class DesktopPet(QWidget):
         painter.drawPixmap(local_rect.topLeft(), self._tail_pix)
         painter.restore()
 
-        # 3) 头部：轻微旋转 + 位移叠在上方
+        # 3) 头部：轻微转头 / 点头
         painter.save()
         pivot = origin + self._head_pivot
         painter.translate(pivot)
@@ -311,23 +311,21 @@ class DesktopPet(QWidget):
         t = time.perf_counter() - self._idle_t0
         boost = self._idle_boost
 
-        # 尾巴：主频 + 轻微二次谐波，看起来更像真猫摇尾巴
+        # 尾巴一直摇：幅度够大，肉眼随时能看出在动
         self._tail_angle = (
-            math.sin(t * 3.2 * boost) * 16.0
-            + math.sin(t * 5.1 * boost + 0.6) * 4.0
+            math.sin(t * 4.4 * boost) * 28.0
+            + math.sin(t * 7.0 * boost + 0.8) * 8.0
         )
 
-        # 头部：慢速左右轻转 + 轻微点头/侧移
+        # 头部持续轻转 / 点头
         self._head_angle = (
-            math.sin(t * 1.15 * boost + 0.4) * 5.5
-            + math.sin(t * 0.55 + 1.2) * 2.0
+            math.sin(t * 1.35 * boost + 0.4) * 7.0
+            + math.sin(t * 0.65 + 1.2) * 2.5
         )
-        self._head_bob_x = math.sin(t * 0.9 * boost) * (2.2 * self._scale)
-        self._head_bob_y = math.sin(t * 1.7 * boost + 0.8) * (1.4 * self._scale)
+        self._head_bob_x = math.sin(t * 1.05 * boost) * (2.8 * self._scale)
+        self._head_bob_y = math.sin(t * 1.9 * boost + 0.8) * (1.8 * self._scale)
 
-        # 互动动画期间也保持刷新；无互动时只靠 idle 刷新
-        if not self._anim_timer.isActive():
-            self.update()
+        self.update()
 
     def _reset_idle_boost(self) -> None:
         self._idle_boost = 1.0
