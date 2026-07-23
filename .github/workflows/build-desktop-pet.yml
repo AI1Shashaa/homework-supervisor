@@ -40,9 +40,20 @@ jobs:
       - name: Build EXE
         run: python -m PyInstaller --noconfirm desktop_pet.spec
 
+      - name: Make portable zip
+        shell: bash
+        run: |
+          mkdir -p release
+          cp dist/DesktopPet.exe release/
+          cp 使用说明.txt release/
+          cd release
+          powershell -Command "Compress-Archive -Path 'DesktopPet.exe','使用说明.txt' -DestinationPath '../DesktopPet-便携版.zip' -Force"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: DesktopPet-windows
-          path: desktop-pet/dist/DesktopPet.exe
+          path: |
+            desktop-pet/dist/DesktopPet.exe
+            desktop-pet/DesktopPet-便携版.zip
           if-no-files-found: error

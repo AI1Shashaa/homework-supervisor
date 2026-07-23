@@ -82,11 +82,15 @@ def test_play() -> None:
 
 def test_construct_pet() -> None:
     app = QApplication.instance() or QApplication([])
-    from main import DesktopPet
+    from main import DesktopPet, discover_video_dir
+
+    video_dir = discover_video_dir()
+    assert video_dir.is_dir(), video_dir
+    print("discover ok", video_dir)
 
     pet = DesktopPet()
     assert pet._current_state in pet._states
-    print("pet construct ok", pet._current_state)
+    print("pet construct ok", pet._current_state, "from", pet._video_source)
     pet.close()
 
 

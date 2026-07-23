@@ -5,7 +5,9 @@
 from __future__ import annotations
 
 import json
+import os
 import random
+import shutil
 import sys
 from pathlib import Path
 
@@ -29,6 +31,20 @@ from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer, QVideoFrame, QVideo
 from PySide6.QtWidgets import QApplication, QMenu, QMessageBox, QWidget
 
 
+VIDEO_FILES = [
+    "video.mp4",
+    "video (1).mp4",
+    "video (2).mp4",
+    "video (3).mp4",
+    "video (4).mp4",
+    "video (5).mp4",
+    "video (6).mp4",
+    "video (7).mp4",
+    "video (8).mp4",
+    "video (9).mp4",
+]
+
+
 def resource_path(*parts: str) -> Path:
     """开发模式与 PyInstaller 打包后的资源路径。"""
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
@@ -36,6 +52,96 @@ def resource_path(*parts: str) -> Path:
     else:
         base = Path(__file__).resolve().parent
     return base.joinpath(*parts)
+
+
+def app_dir() -> Path:
+    """可执行文件 / 项目根目录（用于旁路 videos 文件夹）。"""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+def _dir_has_all_videos(directory: Path) -> bool:
+    return directory.is_dir() and all((directory / name).is_file() for name in VIDEO_FILES)
+
+
+def _dir_total_size(directory: Path) -> int:
+    return sum((directory / name).stat().st_size for name in VIDEO_FILES)
+
+
+def candidate_video_dirs() -> list[Path]:
+    home = Path.home()
+    user_profile = Path(os.environ.get("USERPROFILE") or home)
+    dirs = [
+        app_dir() / "videos",
+        app_dir() / "assets" / "videos",
+        resource_path("assets", "videos"),
+        user_profile / "Downloads",
+        home / "Downloads",
+        Path(r"C:\Users\1\Downloads"),
+    ]
+    # 去重并保持顺序
+    seen: set[str] = set()
+    unique: list[Path] = []
+    for path in dirs:
+        key = str(path).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(path)
+    return unique
+
+
+def discover_video_dir() -> Path:
+    """优先使用体积更大的完整素材目录（真实视频 > 占位视频）。"""
+    found: list[tuple[int, Path]] = []
+    for directory in candidate_video_dirs():
+        try:
+            if _dir_has_all_videos(directory):
+                found.append((_dir_total_size(directory), directory))
+        except OSError:
+            continue
+    if not found:
+        searched = "\n".join(f"  - {p}" for p in candidate_video_dirs())
+        raise FileNotFoundError(
+            "未找到 10 个视频素材（video.mp4 ~ video (9).mp4）。\n\n"
+            "请把它们放在以下任一位置后重新打开：\n"
+            f"{searched}\n\n"
+            "推荐：直接放在「下载」文件夹，或与 DesktopPet.exe 同目录的 videos 文件夹。"
+        )
+    found.sort(key=lambda item: item[0], reverse=True)
+    return found[0][1]
+
+
+def maybe_mirror_videos(source_dir: Path) -> Path:
+    """若素材来自 Downloads，复制到 exe 旁 videos/，方便以后带走使用。"""
+    local_dir = app_dir() / "videos"
+    try:
+        if source_dir.resolve() == local_dir.resolve():
+            return source_dir
+    except OSError:
+        pass
+
+    # 仅在打包后、且来源不是内置资源时镜像
+    if not getattr(sys, "frozen", False):
+        return source_dir
+    bundled = resource_path("assets", "videos")
+    try:
+        if source_dir.resolve() == bundled.resolve():
+            return source_dir
+    except OSError:
+        pass
+
+    try:
+        local_dir.mkdir(parents=True, exist_ok=True)
+        for name in VIDEO_FILES:
+            src = source_dir / name
+            dst = local_dir / name
+            if not dst.is_file() or dst.stat().st_size != src.stat().st_size:
+                shutil.copy2(src, dst)
+        return local_dir
+    except OSError:
+        return source_dir
 
 
 class DesktopPet(QWidget):
@@ -96,21 +202,21 @@ class DesktopPet(QWidget):
             raise FileNotFoundError(f"缺少配置文件: {cfg_path}")
         self._config = json.loads(cfg_path.read_text(encoding="utf-8"))
         self._states: dict = self._config.get("states", {})
-        self._video_dir = resource_path("assets", "videos")
+        discovered = discover_video_dir()
+        self._video_dir = maybe_mirror_videos(discovered)
+        self._video_source = str(discovered)
+
         missing = []
         for key, meta in self._states.items():
             path = self._video_dir / meta["file"]
             if not path.is_file():
                 missing.append(f"{key}: {meta['file']}")
         if missing:
-            tip = (
-                "未找到视频素材，请先导入：\n"
-                "  双击 scripts\\import_videos.bat\n"
-                "或:\n"
-                "  python scripts\\import_videos.py --from \"C:\\Users\\1\\Downloads\"\n\n"
-                "缺少:\n- " + "\n- ".join(missing)
+            raise FileNotFoundError(
+                "视频素材不完整：\n- "
+                + "\n- ".join(missing)
+                + f"\n\n当前目录: {self._video_dir}"
             )
-            raise FileNotFoundError(tip)
 
         self._chroma_mode = str(self._config.get("chroma_key", "auto")).lower()
         self._chroma_threshold = int(self._config.get("chroma_threshold", 42))
@@ -488,6 +594,10 @@ class DesktopPet(QWidget):
         )
         mute_act.triggered.connect(self._toggle_mute)
         menu.addAction(mute_act)
+
+        src_act = QAction(f"素材: {Path(self._video_source).name}", self)
+        src_act.setEnabled(False)
+        menu.addAction(src_act)
 
         menu.addSeparator()
         quit_act = QAction("退出程序", self)
