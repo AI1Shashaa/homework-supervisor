@@ -1,0 +1,73 @@
+{
+  "name": "桌面萌宠",
+  "chroma_key": "auto",
+  "chroma_threshold": 42,
+  "default_state": "idle",
+  "click_cycle": ["pet", "happy", "eat", "special", "sit"],
+  "idle_variants": ["idle", "look"],
+  "idle_variant_seconds": [8, 18],
+  "dialogues": {
+    "pet": ["喵呜～好舒服", "再摸摸嘛", "呼噜呼噜…"],
+    "happy": ["太开心啦！", "嘿嘿～", "今天运气爆棚！"],
+    "eat": ["真好吃！", "再来一口～", "干饭时间到！"],
+    "special": ["看我厉害吧！", "惊喜时刻～", "哇噢！"],
+    "sit": ["坐坐好～", "乖巧待命中", "休息一下"],
+    "sleep": ["晚安…Zzz", "别吵我睡觉哦", "困困…"],
+    "walk": ["溜达溜达～", "去哪儿玩？"],
+    "run": ["冲鸭！", "跑得好快！"],
+    "look": ["发生什么事了？", "喵？"],
+    "idle": ["发呆中…", "想你了喵"]
+  },
+  "states": {
+    "idle": {
+      "file": "video.mp4",
+      "label": "待机",
+      "loop": true
+    },
+    "look": {
+      "file": "video (1).mp4",
+      "label": "张望",
+      "loop": true
+    },
+    "walk": {
+      "file": "video (2).mp4",
+      "label": "走路",
+      "loop": true
+    },
+    "run": {
+      "file": "video (3).mp4",
+      "label": "奔跑",
+      "loop": false
+    },
+    "sit": {
+      "file": "video (4).mp4",
+      "label": "坐下",
+      "loop": false
+    },
+    "sleep": {
+      "file": "video (5).mp4",
+      "label": "睡觉",
+      "loop": true
+    },
+    "eat": {
+      "file": "video (6).mp4",
+      "label": "吃东西",
+      "loop": false
+    },
+    "happy": {
+      "file": "video (7).mp4",
+      "label": "开心",
+      "loop": false
+    },
+    "pet": {
+      "file": "video (8).mp4",
+      "label": "被摸",
+      "loop": false
+    },
+    "special": {
+      "file": "video (9).mp4",
+      "label": "特殊",
+      "loop": false
+    }
+  }
+}
