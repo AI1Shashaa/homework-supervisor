@@ -41,13 +41,14 @@ jobs:
         run: python -m PyInstaller --noconfirm desktop_pet.spec
 
       - name: Make portable zip
-        shell: bash
+        shell: pwsh
         run: |
-          mkdir -p release
-          cp dist/DesktopPet.exe release/
-          cp 使用说明.txt release/
-          cd release
-          powershell -Command "Compress-Archive -Path 'DesktopPet.exe','使用说明.txt' -DestinationPath '../DesktopPet-便携版.zip' -Force"
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          Copy-Item dist/DesktopPet.exe release/
+          # 使用 ASCII 文件名，避免 Windows Compress-Archive 中文乱码
+          Copy-Item "使用说明.txt" release/readme.txt
+          if (Test-Path DesktopPet-portable.zip) { Remove-Item DesktopPet-portable.zip -Force }
+          Compress-Archive -Path release\* -DestinationPath DesktopPet-portable.zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -55,5 +56,5 @@ jobs:
           name: DesktopPet-windows
           path: |
             desktop-pet/dist/DesktopPet.exe
-            desktop-pet/DesktopPet-便携版.zip
+            desktop-pet/DesktopPet-portable.zip
           if-no-files-found: error
